@@ -1,14 +1,7 @@
-import knex from 'knex';
-import env from '@config/env';
+import { PrismaClient } from '@prisma/client';
 
-const db = knex({
-  client: 'pg',
-  connection: {
-    host: env.DB_HOST,
-    user: env.DB_USER,
-    password: env.DB_PASSWORD,
-    database: env.DB_NAME,
-  },
-});
+const globalForPrisma = global as unknown as { prisma: PrismaClient };
 
-export default db;
+export const prisma = globalForPrisma.prisma || new PrismaClient();
+
+if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;

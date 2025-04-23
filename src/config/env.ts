@@ -1,10 +1,11 @@
 const env = {
-    APP_PORT: process.env.APP_PORT || 3000,
-    DB_HOST: process.env.DB_HOST || 'localhost',
-    DB_NAME: process.env.DB_NAME ||'your-database-name',
-    DB_USER: process.env.DB_USER ||'your-db-user',
-    DB_PASSWORD: process.env.DB_PASSWORD ||'your-db-password',
-    DB_PORT: process.env.DB_PORT || 5432,
-}
+  APP_PORT: process.env.APP_PORT || 3000,
+  DATABASE_URL: process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5432/mydb',
+  NODE_ENV: process.env.NODE_ENV || 'development',
+  JWT_SECRET_ACCESS: process.env.JWT_SECRET_ACCESS || 'mysecretaccess',
+  JWT_SECRET_REFRESH: process.env.JWT_SECRET_REFRESH || 'mysecretrefresh',
+  JWT_SECRET_ACCESS_LIFETIME: process.env.JWT_SECRET_ACCESS_LIFETIME || '1h',
+  JWT_SECRET_REFRESH_LIFETIME: process.env.JWT_SECRET_REFRESH_LIFETIME || '7d',
+};
 
 export default env;
