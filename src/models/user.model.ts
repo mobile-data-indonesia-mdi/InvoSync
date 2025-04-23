@@ -42,3 +42,4 @@ export const userPublicSchema = UserSchema.omit({
 
 export type UserRequest = z.infer<typeof userRequestSchema>;
 export type UserLogin = z.infer<typeof userLoginSchema>;
+export type UserPublic = z.infer<typeof userPublicSchema>;

@@ -1,6 +1,6 @@
 import { prisma } from '@config/db';
 import bcrypt from 'bcryptjs';
-import type { UserRequest, UserLogin } from '@models/user.model';
+import { type UserRequest, type UserLogin, userPublicSchema } from '@models/user.model';
 import jwt from 'jsonwebtoken';
 import env from '@config/env';
 import ms from 'ms';
@@ -102,6 +102,78 @@ export const refreshTokenService = async (refreshToken: string) => {
     return accessToken;
   } catch (error) {
     console.error('Error refreshing token:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
+    throw new Error(errorMessage);
+  }
+};
+
+export const getAllUserService = async () => {
+  try {
+    const users = await prisma.user.findMany();
+
+    //parse jadi public schema
+    const parsedUsers = users.map(u => userPublicSchema.parse(u));
+
+    return parsedUsers;
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
+    throw new Error(errorMessage);
+  }
+};
+
+export const getUserByIdService = async (user_id: string) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: {
+        user_id,
+      },
+    });
+
+    if (!user) {
+      throw new Error('User tidak ditemukan');
+    }
+
+    //parse jadi public chema
+    const parsedUser = userPublicSchema.parse(user);
+
+    return parsedUser;
+  } catch (error) {
+    console.error('Error fetching user:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
+    throw new Error(errorMessage);
+  }
+};
+
+export const updateUserByIdService = async (user_id: string, userData: UserRequest) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: {
+        user_id,
+      },
+    });
+
+    if (!user) {
+      throw new Error('User tidak ditemukan');
+    }
+
+    // Hash password sebelum disimpan
+    const hashedPassword = await bcrypt.hash(userData.password, 10);
+
+    const updatedUser = await prisma.user.update({
+      where: {
+        user_id,
+      },
+      data: {
+        username: userData.username,
+        password: hashedPassword,
+        role: userData.role,
+      },
+    });
+
+    return updatedUser;
+  } catch (error) {
+    console.error('Error updating user:', error);
     const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
     throw new Error(errorMessage);
   }
