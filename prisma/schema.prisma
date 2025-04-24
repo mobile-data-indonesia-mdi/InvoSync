@@ -13,13 +13,102 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// model Log {
+//   id         BigInt   @id @default(autoincrement())
+//   level      String   // "info", "warn", "error", "debug"
+//   message    String
+//   context    String?  // misalnya: "UserService.create"
+//   meta       Json?    // info tambahan dalam bentuk JSON
+//   createdAt  DateTime @default(now())
+//   createdBy  String?  // bisa "system" atau user ID/email
+
+//   @@index([level])
+//   @@index([createdAt])
+// }
+
+
 model User {
-  user_id String @id @default(uuid())
+  user_id       String @id @default(uuid())
   username      String    @unique
-  password    String
-  role         String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  password      String
+  role          String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   @@map("users")
+}
+
+model Client{
+  client_id       String @id @default(uuid())
+  client_name     String @unique
+  currency        String
+  country         String
+  client_address  String
+  postal_code     String
+  client_phone    String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  invoices        Invoice[]
+
+  @@map("clients")
+}
+
+model Invoice{
+  invoice_id          String    @id @default(uuid())
+  invoice_number      String    @unique
+  issue_date          DateTime
+  due_date            DateTime
+  tax_rate            Float
+  tax_amount          Float
+  sub_total           Float
+  total               Float
+  tax_invoice_number  String
+  amount_paid         Float
+  payment_status      String
+  voidedAt            DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  //relasi user - invoice
+  client_id           String
+  client              Client @relation(fields: [client_id], references: [client_id])
+
+  //relasi invoice - invoice_detail
+  invoice_details     InvoiceDetail[]
+
+  //relasi invoice - payment
+  payments            Payment[]
+
+  @@map("invoices")
+}
+
+model InvoiceDetail{
+  invoice_detail_id String @id @default(uuid())
+  transaction_note  String
+  delivery_count     String
+  price_per_delivery  Float
+  amount            Float
+
+  @@map("invoice_details")
+
+  //relasi invoice - invoice_detail
+  invoice_id        String
+  invoice           Invoice @relation(fields: [invoice_id], references: [invoice_id])
+}
+
+model Payment{
+  payment_id          String @id @default(uuid())
+  payment_date        DateTime
+  amount_paid         Float
+  proof_of_transfer   String
+  voidedAt            DateTime?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@map("payments")
+
+  //relasi invoice - payment
+  invoice_id          String
+  invoice             Invoice @relation(fields: [invoice_id], references: [invoice_id])
 }
