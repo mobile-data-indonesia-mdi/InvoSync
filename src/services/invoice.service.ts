@@ -42,34 +42,24 @@ export const getInvoiceByIdService = async (invoice_id: string) => {
 
 export const createInvoiceService = async (invoiceData: invoiceWithDetailsRequestSchema) => {
   try {
-    //kalkulasi amount dulu
-    const invoiceDetailsWithAmount = invoiceData.invoice_details.map(detail => {
-      const amount = detail.delivery_count * detail.price_per_delivery;
-      return {
-        ...detail,
-        amount: amount,
-      };
-    });
+    // Calculate amounts for each invoice detail
+    const invoiceDetailsWithAmount = invoiceData.invoice_details.map(detail => ({
+      ...detail,
+      amount: detail.delivery_count * detail.price_per_delivery,
+    }));
 
-    //menghitung sub total, tax amount, and total
-    const subTotal = invoiceDetailsWithAmount.reduce((acc, detail) => {
-      return acc + detail.amount;
-    }, 0);
-
-    //menghitung pajak harga
+    // Calculate subtotal, tax amount, and total
+    const subTotal = invoiceDetailsWithAmount.reduce((acc, detail) => acc + detail.amount, 0);
     const taxAmount = subTotal * invoiceData.tax_rate;
-
-    //harga akhir stelah pajak
     const total = subTotal + taxAmount;
 
-    //set default pembayaran
+    // Default values for payment
     const amountPaid = 0;
-
-    //set default status
     const paymentStatus = 'unpaid';
 
+    // Create invoice and associated details in a transaction
     const createdInvoice = await prisma.$transaction(async tx => {
-      const invoice = await prisma.invoice.create({
+      const invoice = await tx.invoice.create({
         data: {
           invoice_number: invoiceData.invoice_number,
           issue_date: invoiceData.issue_date,
@@ -77,7 +67,7 @@ export const createInvoiceService = async (invoiceData: invoiceWithDetailsReques
           sub_total: subTotal,
           tax_rate: invoiceData.tax_rate,
           tax_amount: taxAmount,
-          total: total,
+          total,
           tax_invoice_number: invoiceData.tax_invoice_number,
           amount_paid: amountPaid,
           voidedAt: invoiceData.voidedAt,
@@ -92,12 +82,15 @@ export const createInvoiceService = async (invoiceData: invoiceWithDetailsReques
           invoice_id: invoice.invoice_id,
         })),
       });
-      console.log(invoice);
+
+      return invoice;
     });
+
     return createdInvoice;
   } catch (error) {
     console.error('Error creating invoice:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
+    const errorMessage =
+      error instanceof Error ? error.message : 'An error occurred while creating the invoice';
     throw new Error(errorMessage);
   }
 };
