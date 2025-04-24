@@ -6,7 +6,7 @@ import {
   updateClientByIdService,
   deleteClientByIdService,
 } from '@services/client.service';
-import { parseZodError } from 'src/utils/ResponseHelper';
+import { parseZodError } from '@utils/ResponseHelper';
 import { clientRequestSchema } from '@models/client.model';
 
 export const getAllClientController = async (_req: Request, res: Response): Promise<void> => {

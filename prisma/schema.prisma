@@ -19,11 +19,11 @@ datasource db {
 //   message    String
 //   context    String?  // misalnya: "UserService.create"
 //   meta       Json?    // info tambahan dalam bentuk JSON
-//   createdAt  DateTime @default(now())
+//   created_at  DateTime @default(now())
 //   createdBy  String?  // bisa "system" atau user ID/email
 
 //   @@index([level])
-//   @@index([createdAt])
+//   @@index([created_at])
 // }
 
 
@@ -32,8 +32,8 @@ model User {
   username      String    @unique
   password      String
   role          String
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
 
   @@map("users")
 }
@@ -46,8 +46,8 @@ model Client{
   client_address  String
   postal_code     String
   client_phone    String
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
 
   invoices        Invoice[]
 
@@ -57,22 +57,22 @@ model Client{
 model Invoice{
   invoice_id          String    @id @default(uuid())
   invoice_number      String    @unique
-  issue_date          DateTime
-  due_date            DateTime
+  issue_date          DateTime //tanggal terbit
+  due_date            DateTime //jatuh tempo (prisma ga ada tipe data date)
+  sub_total           Float
   tax_rate            Float
   tax_amount          Float
-  sub_total           Float
   total               Float
   tax_invoice_number  String
   amount_paid         Float
   payment_status      String
   voidedAt            DateTime?
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
+  created_at           DateTime  @default(now())
+  updated_at           DateTime  @updatedAt
 
   //relasi user - invoice
   client_id           String
-  client              Client @relation(fields: [client_id], references: [client_id])
+  client              Client @relation(fields: [client_id], references: [client_id], onDelete: Cascade)
 
   //relasi invoice - invoice_detail
   invoice_details     InvoiceDetail[]
@@ -84,31 +84,33 @@ model Invoice{
 }
 
 model InvoiceDetail{
-  invoice_detail_id String @id @default(uuid())
-  transaction_note  String
-  delivery_count     String
-  price_per_delivery  Float
-  amount            Float
+  invoice_detail_id     String @id @default(uuid())
+  transaction_note      String
+  delivery_count        Int //ada big int
+  price_per_delivery    Float
+  amount                Float
+  created_at            DateTime  @default(now())
+  updated_at            DateTime  @updatedAt
 
   @@map("invoice_details")
 
   //relasi invoice - invoice_detail
   invoice_id        String
-  invoice           Invoice @relation(fields: [invoice_id], references: [invoice_id])
+  invoice           Invoice @relation(fields: [invoice_id], references: [invoice_id], onDelete: Cascade)
 }
 
 model Payment{
-  payment_id          String @id @default(uuid())
-  payment_date        DateTime
-  amount_paid         Float
-  proof_of_transfer   String
-  voidedAt            DateTime?
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  payment_id            String @id @default(uuid())
+  payment_date          DateTime
+  amount_paid           Float
+  proof_of_transfer     String
+  voidedAt              DateTime?
+  created_at            DateTime @default(now())
+  updated_at            DateTime @updatedAt
 
   @@map("payments")
 
   //relasi invoice - payment
   invoice_id          String
-  invoice             Invoice @relation(fields: [invoice_id], references: [invoice_id])
+  invoice             Invoice @relation(fields: [invoice_id], references: [invoice_id], onDelete: Cascade)
 }

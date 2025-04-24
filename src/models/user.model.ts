@@ -40,6 +40,10 @@ export const userPublicSchema = userSchema.omit({
   password: true,
 });
 
+export const userChangePassword = userSchema.pick({
+  password: true,
+});
+
 export type UserRequest = z.infer<typeof userRequestSchema>;
 export type UserLogin = z.infer<typeof userLoginSchema>;
 export type UserPublic = z.infer<typeof userPublicSchema>;
