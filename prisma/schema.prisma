@@ -32,6 +32,7 @@ model User {
   username      String    @unique
   password      String
   role          String
+  deleted_at   DateTime?
   created_at     DateTime @default(now())
   updated_at     DateTime @updatedAt
 
@@ -46,6 +47,7 @@ model Client{
   client_address  String
   postal_code     String
   client_phone    String
+  deleted_at   DateTime?
   created_at       DateTime @default(now())
   updated_at       DateTime @updatedAt
 
@@ -89,6 +91,7 @@ model InvoiceDetail{
   delivery_count        Int //ada big int
   price_per_delivery    Float
   amount                Float
+  deleted_at            DateTime?
   created_at            DateTime  @default(now())
   updated_at            DateTime  @updatedAt
 
