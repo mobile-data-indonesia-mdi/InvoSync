@@ -102,7 +102,7 @@ export const refreshTokenService = async (refreshToken: string) => {
     return accessToken;
   } catch (error) {
     console.error('Error refreshing token:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
+    const errorMessage = error instanceof Error ? error.message : 'Internal Server Problem';
     throw new Error(errorMessage);
   }
 };

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const UserSchema = z.object({
+export const userSchema = z.object({
   user_id: z.string().uuid(),
   username: z
     .string({
@@ -18,25 +18,29 @@ export const UserSchema = z.object({
     .min(8, { message: 'Password minimal 8 karakter' })
     .max(100, { message: 'Password maksimal 100 karakter' }),
 
-  role: z.enum(['management', 'finnance', 'it', 'admin'], {
-    errorMap: () => ({ message: 'Role harus salah satu dari: management, finnance, it, admin' }),
+  role: z.enum(['management', 'finance', 'it', 'admin'], {
+    errorMap: () => ({ message: 'Role harus salah satu dari: management, finance, it, admin' }),
   }),
   createdAt: z.date(),
   updatedAt: z.date(),
 });
 
-export const userRequestSchema = UserSchema.pick({
+export const userRequestSchema = userSchema.pick({
   username: true,
   password: true,
   role: true,
 });
 
-export const userLoginSchema = UserSchema.pick({
+export const userLoginSchema = userSchema.pick({
   username: true,
   password: true,
 });
 
-export const userPublicSchema = UserSchema.omit({
+export const userPublicSchema = userSchema.omit({
+  password: true,
+});
+
+export const userChangePassword = userSchema.pick({
   password: true,
   createdAt: true,
   updatedAt: true,
