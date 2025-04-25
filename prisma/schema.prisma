@@ -47,7 +47,7 @@ model Client{
   client_address  String
   postal_code     String
   client_phone    String
-  deleted_at   DateTime?
+  deleted_at      DateTime?
   created_at       DateTime @default(now())
   updated_at       DateTime @updatedAt
 
@@ -65,10 +65,10 @@ model Invoice{
   tax_rate            Float
   tax_amount          Float
   total               Float
-  tax_invoice_number  String
-  amount_paid         Float
-  payment_status      String
-  voidedAt            DateTime?
+  tax_invoice_number    String
+  amount_paid           Float
+  payment_status        String
+  voided_at            DateTime?
   created_at           DateTime  @default(now())
   updated_at           DateTime  @updatedAt
 
@@ -107,7 +107,7 @@ model Payment{
   payment_date          DateTime
   amount_paid           Float
   proof_of_transfer     String
-  voidedAt              DateTime?
+  voided_at              DateTime?
   created_at            DateTime @default(now())
   updated_at            DateTime @updatedAt
 
