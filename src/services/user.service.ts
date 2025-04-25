@@ -113,7 +113,6 @@ export const getAllUserService = async () => {
 
     //parse jadi public schema
     const parsedUsers = users.map(u => userPublicSchema.parse(u));
-
     return parsedUsers;
   } catch (error) {
     console.error('Error fetching users:', error);

@@ -38,6 +38,8 @@ export const userLoginSchema = UserSchema.pick({
 
 export const userPublicSchema = UserSchema.omit({
   password: true,
+  createdAt: true,
+  updatedAt: true,
 });
 
 export type UserRequest = z.infer<typeof userRequestSchema>;
