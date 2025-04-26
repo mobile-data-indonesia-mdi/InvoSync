@@ -4,7 +4,6 @@ import cookieParser from 'cookie-parser';
 import userRoute from '@routes/user.route';
 import clientRoute from '@routes/client.route';
 import invoiceRoute from '@routes/invoice.route';
-import paymentRoute from '@routes/payment.route';
 import env from '@config/env';
 
 const app = express();
@@ -15,7 +14,6 @@ app.use(express.json());
 app.use('/user', userRoute);
 app.use('/client', clientRoute);
 app.use('/invoice', invoiceRoute);
-app.use('/payment', paymentRoute);
 
 app.use((_req, res) => {
   res.status(404).json({

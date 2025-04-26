@@ -3,7 +3,7 @@ import {
   getAllClientService,
   createClientService,
   getClientByIdService,
-  editClientByIdService,
+  updateClientByIdService,
   deleteClientByIdService,
 } from '@services/client.service';
 import { parseZodError } from '@utils/ResponseHelper';
@@ -77,7 +77,7 @@ export const getClientByIdController = async (req: Request, res: Response): Prom
   }
 };
 
-export const editClientByIdController = async (req: Request, res: Response): Promise<void> => {
+export const updateClientByIdController = async (req: Request, res: Response): Promise<void> => {
   const clientId = req.params.id;
 
   if (!clientId) {
@@ -94,7 +94,7 @@ export const editClientByIdController = async (req: Request, res: Response): Pro
   }
 
   try {
-    const updatedClient = await editClientByIdService(clientId, validate.data);
+    const updatedClient = await updateClientByIdService(clientId, validate.data);
 
     res.status(200).json(updatedClient);
     return;

@@ -7,7 +7,7 @@ import {
   logoutController,
   getAllUserController,
   getUserByIdController,
-  editUserByIdController,
+  updateUserByIdController,
 } from '@controllers/user.controller';
 
 const router = Router();
@@ -18,6 +18,6 @@ router.post('/refresh-token', refreshTokenController);
 router.delete('/logout', logoutController);
 router.get('/', getAllUserController);
 router.get('/:id', getUserByIdController);
-router.put('/:id', editUserByIdController);
+router.put('/:id', updateUserByIdController);
 
 export default router;

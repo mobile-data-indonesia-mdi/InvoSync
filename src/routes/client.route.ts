@@ -4,7 +4,7 @@ import {
   createClientController,
   getAllClientController,
   getClientByIdController,
-  editClientByIdController,
+  updateClientByIdController,
   deleteClientByIdController,
 } from '@controllers/client.controller';
 
@@ -13,7 +13,7 @@ const router = Router();
 router.get('/', getAllClientController);
 router.get('/:id', getClientByIdController);
 router.post('/', createClientController);
-router.put('/:id', editClientByIdController);
+router.put('/:id', updateClientByIdController);
 router.delete('/:id', deleteClientByIdController);
 
 export default router;
