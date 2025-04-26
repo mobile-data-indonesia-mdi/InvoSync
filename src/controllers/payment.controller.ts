@@ -6,7 +6,7 @@ import {
   getPaymentByClientService,
   getPaymentByIdService,
   updatePaymentService,
-  restorePaymentService,
+  // restorePaymentService,
 } from '@services/payment.service';
 import { parseZodError } from '@utils/ResponseHelper';
 
@@ -97,19 +97,19 @@ export const updatePaymentController = async (req: Request, res: Response) => {
   }
 };
 
-export const restorePaymentController = async (req: Request, res: Response) => {
-  try {
-    const payment_id = req.params.id;
+// export const restorePaymentController = async (req: Request, res: Response) => {
+//   try {
+//     const payment_id = req.params.id;
 
-    if (!payment_id) {
-      res.status(400).json({ message: 'Payment ID is required' });
-      return;
-    }
+//     if (!payment_id) {
+//       res.status(400).json({ message: 'Payment ID is required' });
+//       return;
+//     }
 
-    const voidPayment = await restorePaymentService(payment_id);
-    res.status(200).json({ message: 'Payment berhasil direstore' });
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
-    res.status(500).json({ error: errorMessage });
-  }
-};
+//     const voidPayment = await restorePaymentService(payment_id);
+//     res.status(200).json({ message: 'Payment berhasil direstore' });
+//   } catch (error) {
+//     const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
+//     res.status(500).json({ error: errorMessage });
+//   }
+// };

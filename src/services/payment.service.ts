@@ -15,7 +15,7 @@ export const createPaymentService = async (paymentData: PaymentRequestSchema) =>
     // Hitung uang yang sudah dibayar
     const newest_amount_paid = (await invoiceData).amount_paid + paymentData.amount_paid;
     const remaining_balance = (await invoiceData).total - newest_amount_paid;
-    var updated_payment_status = '';
+    let updated_payment_status = '';
     if (remaining_balance > 0) {
       if (remaining_balance == (await invoiceData).total) {
         updated_payment_status = 'unpaid';
@@ -37,7 +37,7 @@ export const createPaymentService = async (paymentData: PaymentRequestSchema) =>
           payment_date: paymentData.payment_date,
           amount_paid: paymentData.amount_paid,
           proof_of_transfer: paymentData.proof_of_transfer,
-          voided_at: paymentData.voidedAt,
+          voided_at: paymentData.voided_at,
           invoice_id: paymentData.invoice_id,
         },
       });
@@ -131,14 +131,11 @@ export const updatePaymentService = async (
       throw new Error('Payment tidak ditemukan');
     }
 
-    const updatedPayment = await prisma.$transaction(async tx => {
-      const payment = await prisma.payment.update({
-        where: {
-          payment_id,
-        },
-        data: paymentData,
-      });
-      return payment;
+    const updatedPayment = await prisma.payment.update({
+      where: {
+        payment_id,
+      },
+      data: paymentData,
     });
 
     return updatedPayment;
