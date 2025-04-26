@@ -42,7 +42,7 @@ export const createClientService = async (clientData: ClientRequest) => {
   }
 };
 
-export const updateClientByIdService = async (client_id: string, clientData: ClientRequest) => {
+export const editClientByIdService = async (client_id: string, clientData: ClientRequest) => {
   try {
     const client = await prisma.client.findUnique({
       where: {

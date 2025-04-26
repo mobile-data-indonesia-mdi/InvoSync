@@ -5,7 +5,7 @@ import {
   getAllPaymentService,
   getPaymentByClientService,
   getPaymentByIdService,
-  updatePaymentService,
+  editPaymentService,
   // restorePaymentService,
 } from '@services/payment.service';
 import { parseZodError } from '@utils/ResponseHelper';
@@ -72,7 +72,7 @@ export const getPaymentByIdController = async (req: Request, res: Response) => {
   }
 };
 
-export const updatePaymentController = async (req: Request, res: Response) => {
+export const editPaymentController = async (req: Request, res: Response) => {
   try {
     const payment_id = req.params.id;
 
@@ -89,7 +89,7 @@ export const updatePaymentController = async (req: Request, res: Response) => {
       return;
     }
 
-    const payment = await updatePaymentService(payment_id, validate.data);
+    const payment = await editPaymentService(payment_id, validate.data);
     res.status(201).json({ message: payment });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';

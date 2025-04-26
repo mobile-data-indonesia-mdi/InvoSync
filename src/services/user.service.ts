@@ -146,7 +146,7 @@ export const getUserByIdService = async (user_id: string) => {
   }
 };
 
-export const updateUserByIdService = async (user_id: string, userData: UserRequest) => {
+export const editUserByIdService = async (user_id: string, userData: UserRequest) => {
   try {
     const user = await prisma.user.findUnique({
       where: {

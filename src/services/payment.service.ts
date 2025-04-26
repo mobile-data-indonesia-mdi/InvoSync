@@ -116,7 +116,7 @@ export const getPaymentByIdService = async (payment_id: string) => {
   }
 };
 
-export const updatePaymentService = async (
+export const editPaymentService = async (
   payment_id: string,
   paymentData: PaymentUpdateRequestSchema,
 ) => {
