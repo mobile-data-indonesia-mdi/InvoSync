@@ -37,5 +37,11 @@ export const invoiceWithDetailsRequestSchema = invoiceRequestSchema.extend({
   }),
 });
 
+export const invoiceUpdateFromPaymentRequestSchema = invoiceSchema.pick({
+  amount_paid: true,
+  payment_status: true,
+});
+
 export type InvoiceRequest = z.infer<typeof invoiceRequestSchema>;
 export type invoiceWithDetailsRequestSchema = z.infer<typeof invoiceWithDetailsRequestSchema>;
+export type InvoiceUpdateFromPaymentRequestSchema = z.infer<typeof invoiceUpdateFromPaymentSchema>;
