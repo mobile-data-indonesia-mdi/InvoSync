@@ -44,4 +44,6 @@ export const invoiceUpdateFromPaymentRequestSchema = invoiceSchema.pick({
 
 export type InvoiceRequest = z.infer<typeof invoiceRequestSchema>;
 export type invoiceWithDetailsRequestSchema = z.infer<typeof invoiceWithDetailsRequestSchema>;
-export type InvoiceUpdateFromPaymentRequestSchema = z.infer<typeof invoiceUpdateFromPaymentSchema>;
+export type InvoiceUpdateFromPaymentRequestSchema = z.infer<
+  typeof invoiceUpdateFromPaymentRequestSchema
+>;

@@ -1,12 +1,11 @@
 import type { Request, Response } from 'express';
-import { paymentRequestSchema } from '@models/payment.model';
+import { paymentRequestSchema, paymentUpdateRequestSchema } from '@models/payment.model';
 import {
   createPaymentService,
   getAllPaymentService,
   getPaymentByClientService,
   getPaymentByIdService,
   updatePaymentService,
-  softDeletePaymentService,
   restorePaymentService,
 } from '@services/payment.service';
 import { parseZodError } from '@utils/ResponseHelper';
@@ -82,7 +81,7 @@ export const updatePaymentController = async (req: Request, res: Response) => {
       return;
     }
 
-    const validate = await paymentRequestSchema.safeParseAsync(req.body);
+    const validate = await paymentUpdateRequestSchema.safeParseAsync(req.body);
 
     if (!validate.success) {
       const parsed = parseZodError(validate.error);
@@ -92,24 +91,6 @@ export const updatePaymentController = async (req: Request, res: Response) => {
 
     const payment = await updatePaymentService(payment_id, validate.data);
     res.status(201).json({ message: payment });
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
-    res.status(500).json({ error: errorMessage });
-  }
-};
-
-// Soft Delete and Restore Payment
-export const softDeletePaymentController = async (req: Request, res: Response) => {
-  try {
-    const payment_id = req.params.id;
-
-    if (!payment_id) {
-      res.status(400).json({ message: 'Payment ID is required' });
-      return;
-    }
-
-    const voidPayment = await softDeletePaymentService(payment_id);
-    res.status(200).json({ message: 'Payment berhasil dirubah menjadi void' });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
     res.status(500).json({ error: errorMessage });

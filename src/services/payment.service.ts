@@ -1,5 +1,5 @@
 import { prisma } from '@config/db';
-import type { PaymentRequestSchema } from '@models/payment.model';
+import type { PaymentRequestSchema, PaymentUpdateRequestSchema } from '@models/payment.model';
 import {
   getInvoiceForPaymentService,
   updateInvoiceForPaymentService,
@@ -118,7 +118,7 @@ export const getPaymentByIdService = async (payment_id: string) => {
 
 export const updatePaymentService = async (
   payment_id: string,
-  paymentData: PaymentRequestSchema,
+  paymentData: PaymentUpdateRequestSchema,
 ) => {
   try {
     const payment = await prisma.payment.findUnique({
@@ -148,26 +148,25 @@ export const updatePaymentService = async (
   }
 };
 
-export const softDeletePaymentService = async (payment_id: string) => {
+export const deletePaymentByIdService = async (payment_id: string) => {
   try {
-    const payment = await prisma.payment.findUnique({
+    const invoice = await prisma.payment.findUnique({
       where: {
         payment_id,
       },
     });
 
-    if (!payment) {
+    if (!invoice) {
       throw new Error('Payment tidak ditemukan');
     }
 
-    const voidPayment = await prisma.payment.update({
-      where: { payment_id },
-      data: {
-        voided_at: new Date(),
+    const deletedPayment = await prisma.payment.delete({
+      where: {
+        payment_id,
       },
     });
 
-    return voidPayment;
+    return deletedPayment;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
     throw new Error(errorMessage);

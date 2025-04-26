@@ -19,4 +19,7 @@ export const paymentRequestSchema = paymentSchema.pick({
   invoice_id: true,
 });
 
+export const paymentUpdateRequestSchema = paymentRequestSchema.partial();
+
 export type PaymentRequestSchema = z.infer<typeof paymentRequestSchema>;
+export type PaymentUpdateRequestSchema = z.infer<typeof paymentUpdateRequestSchema>;
