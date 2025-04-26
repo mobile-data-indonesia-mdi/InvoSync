@@ -1,6 +1,10 @@
 import { prisma } from '@config/db';
 
-import { invoiceWithDetailsRequestSchema } from '@models/invoice.model';
+import {
+  invoiceWithDetailsRequestSchema,
+  type InvoiceUpdateFromPaymentRequestSchema,
+} from '@models/invoice.model';
+import type { PrismaClient } from '@prisma/client/extension';
 
 export const getAllInvoiceService = async () => {
   try {
@@ -71,7 +75,7 @@ export const createInvoiceService = async (invoiceData: invoiceWithDetailsReques
           total,
           tax_invoice_number: invoiceData.tax_invoice_number,
           amount_paid: amountPaid,
-          voidedAt: invoiceData.voided_at,
+          voided_at: invoiceData.voided_at,
           payment_status: paymentStatus,
           client_id: invoiceData.client_id,
         },
@@ -162,6 +166,62 @@ export const deleteInvoiceByIdService = async (invoice_id: string) => {
     });
 
     return deletedInvoice;
+    // return deletedInvoice;
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
+    throw new Error(errorMessage);
+  }
+};
+
+// Update from Payment
+export const getInvoiceForPaymentService = async (invoice_id: string) => {
+  try {
+    const invoice = await prisma.invoice.findUnique({
+      where: {
+        invoice_id,
+      },
+      select: {
+        total: true,
+        amount_paid: true,
+        payment_status: true,
+      },
+    });
+
+    if (!invoice) {
+      throw new Error('Invoice tidak ditemukan');
+    }
+
+    return invoice;
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
+    throw new Error(errorMessage);
+  }
+};
+
+export const updateInvoiceForPaymentService = async (
+  tx: PrismaClient,
+  invoice_id: string,
+  invoiceData: InvoiceUpdateFromPaymentRequestSchema,
+) => {
+  try {
+    const invoice = await tx.invoice.findUnique({
+      where: {
+        invoice_id,
+      },
+    });
+
+    if (!invoice) {
+      throw new Error('Invoice tidak ditemukan');
+    }
+
+    const updatedInvoice = await tx.invoice.update({
+      where: {
+        invoice_id,
+      },
+      data: invoiceData,
+    });
+
+    return updatedInvoice;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
     throw new Error(errorMessage);
