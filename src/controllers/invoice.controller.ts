@@ -4,7 +4,7 @@ import {
   createInvoiceService,
   getInvoiceByIdService,
   // updateInvoiceByIdService,
-  // deleteInvoiceByIdService,
+  deleteInvoiceByIdService,
 } from '@services/invoice.service';
 import { parseZodError } from '@utils/ResponseHelper';
 import { invoiceWithDetailsRequestSchema } from '@models/invoice.model';
@@ -62,7 +62,7 @@ export const getInvoiceByIdController = async (req: Request, res: Response): Pro
 //       return;
 //     }
 
-//     const validate = await invoiceRequestSchema.safeParseAsync(req.body);
+//     const validate = await invoiceWithDetailsRequestSchema.safeParseAsync(req.body);
 
 //     if (!validate.success) {
 //       const parsed = parseZodError(validate.error);
@@ -78,17 +78,17 @@ export const getInvoiceByIdController = async (req: Request, res: Response): Pro
 //   }
 // };
 
-// export const deleteInvoiceByIdController = async (req: Request, res: Response): Promise<void> => {
-//   try {
-//     const invoice_id = req.params.id;
-//     if (!invoice_id) {
-//       res.status(400).json({ message: 'Invoice ID is required' });
-//       return;
-//     }
-//     await deleteInvoiceByIdService(invoice_id);
-//     res.status(204).send();
-//   } catch (error) {
-//     const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
-//     res.status(500).json({ error: errorMessage });
-//   }
-// };
+export const deleteInvoiceByIdController = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const invoice_id = req.params.id;
+    if (!invoice_id) {
+      res.status(400).json({ message: 'Invoice ID is required' });
+      return;
+    }
+    await deleteInvoiceByIdService(invoice_id);
+    res.status(204).send();
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
+    res.status(500).json({ error: errorMessage });
+  }
+};

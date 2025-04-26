@@ -1,12 +1,17 @@
 import { prisma } from '@config/db';
 
-import { invoiceWithDetailsRequestSchema } from '@models/invoice.model';
+import {
+  invoiceWithDetailsRequestSchema,
+  type InvoiceUpdateFromPaymentRequestSchema,
+} from '@models/invoice.model';
+import type { PrismaClient } from '@prisma/client/extension';
 
 export const getAllInvoiceService = async () => {
   try {
     const invoices = await prisma.invoice.findMany({
       include: {
         client: true,
+        invoice_details: true,
       },
     });
 
@@ -70,7 +75,7 @@ export const createInvoiceService = async (invoiceData: invoiceWithDetailsReques
           total,
           tax_invoice_number: invoiceData.tax_invoice_number,
           amount_paid: amountPaid,
-          voidedAt: invoiceData.voidedAt,
+          voided_at: invoiceData.voided_at,
           payment_status: paymentStatus,
           client_id: invoiceData.client_id,
         },
@@ -95,16 +100,37 @@ export const createInvoiceService = async (invoiceData: invoiceWithDetailsReques
   }
 };
 
-// export const updateInvoiceByIdService = async (invoice_id: string, invoiceData: InvoiceRequest) => {
+// export const updateInvoiceByIdService = async (
+//   invoice_id: string,
+//   invoiceData: invoiceWithDetailsRequestSchema,
+// ) => {
 //   try {
-//     const invoice = await prisma.invoice.findUnique({
-//       where: {
-//         invoice_id,
-//       },
+//     const existingDetails = await prisma.invoiceDetail.findMany({
+//       where: { invoice_id: invoice_id },
 //     });
 
-//     if (!invoice) {
-//       throw new Error('Invoice tidak ditemukan');
+//     const incomingDetails = invoiceData.invoice_details;
+
+//     for (const detail of incomingDetails) {
+//       if (detail.invoice_detail_id) {
+//         // Cari dan update
+//         await db.invoiceDetails.update({
+//           where: { id: detail.id },
+//           data: {
+//             transaction_note: detail.transaction_note,
+//             delivery_count: detail.delivery_count,
+//             price_per_delivery: detail.price_per_delivery,
+//           },
+//         });
+//       } else {
+//         // Tambah detail baru
+//         await db.invoiceDetails.create({
+//           data: {
+//             ...detail,
+//             invoice_id: invoiceIdFromParams,
+//           },
+//         });
+//       }
 //     }
 
 //     const updatedInvoice = await prisma.invoice.update({
@@ -121,27 +147,83 @@ export const createInvoiceService = async (invoiceData: invoiceWithDetailsReques
 //   }
 // };
 
-// export const deleteInvoiceByIdService = async (invoice_id: string) => {
-//   try {
-//     const invoice = await prisma.invoice.findUnique({
-//       where: {
-//         invoice_id,
-//       },
-//     });
+export const deleteInvoiceByIdService = async (invoice_id: string) => {
+  try {
+    const invoice = await prisma.invoice.findUnique({
+      where: {
+        invoice_id,
+      },
+    });
 
-//     if (!invoice) {
-//       throw new Error('Invoice tidak ditemukan');
-//     }
+    if (!invoice) {
+      throw new Error('Invoice tidak ditemukan');
+    }
 
-//     const deletedInvoice = await prisma.invoice.delete({
-//       where: {
-//         invoice_id,
-//       },
-//     });
+    const deletedInvoice = await prisma.invoice.delete({
+      where: {
+        invoice_id,
+      },
+    });
 
-//     return deletedInvoice;
-//   } catch (error) {
-//     const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
-//     throw new Error(errorMessage);
-//   }
-// };
+    return deletedInvoice;
+    // return deletedInvoice;
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
+    throw new Error(errorMessage);
+  }
+};
+
+// Update from Payment
+export const getInvoiceForPaymentService = async (invoice_id: string) => {
+  try {
+    const invoice = await prisma.invoice.findUnique({
+      where: {
+        invoice_id,
+      },
+      select: {
+        total: true,
+        amount_paid: true,
+        payment_status: true,
+      },
+    });
+
+    if (!invoice) {
+      throw new Error('Invoice tidak ditemukan');
+    }
+
+    return invoice;
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
+    throw new Error(errorMessage);
+  }
+};
+
+export const updateInvoiceForPaymentService = async (
+  tx: PrismaClient,
+  invoice_id: string,
+  invoiceData: InvoiceUpdateFromPaymentRequestSchema,
+) => {
+  try {
+    const invoice = await tx.invoice.findUnique({
+      where: {
+        invoice_id,
+      },
+    });
+
+    if (!invoice) {
+      throw new Error('Invoice tidak ditemukan');
+    }
+
+    const updatedInvoice = await tx.invoice.update({
+      where: {
+        invoice_id,
+      },
+      data: invoiceData,
+    });
+
+    return updatedInvoice;
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
+    throw new Error(errorMessage);
+  }
+};

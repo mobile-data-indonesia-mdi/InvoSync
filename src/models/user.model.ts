@@ -38,6 +38,8 @@ export const userLoginSchema = userSchema.pick({
 
 export const userPublicSchema = userSchema.omit({
   password: true,
+  createdAt: true,
+  updatedAt: true,
 });
 
 export const userChangePassword = userSchema.pick({

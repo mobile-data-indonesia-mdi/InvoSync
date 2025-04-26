@@ -5,7 +5,7 @@ import {
   refreshTokenService,
   getAllUserService,
   getUserByIdService,
-  updateUserByIdService,
+  editUserByIdService,
 } from '@services/user.service';
 import { userRequestSchema, userLoginSchema } from '@models/user.model';
 import { parseZodError } from 'src/utils/ResponseHelper';
@@ -163,7 +163,7 @@ export const getUserByIdController = async (req: Request, res: Response): Promis
 
 //update user by id (PUT)
 
-export const updateUserByIdController = async (req: Request, res: Response): Promise<void> => {
+export const editUserByIdController = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = req.params.id;
 
@@ -181,7 +181,7 @@ export const updateUserByIdController = async (req: Request, res: Response): Pro
     }
 
     // Call the service to update user by ID
-    const updatedUser = await updateUserByIdService(userId, validate.data);
+    const updatedUser = await editUserByIdService(userId, validate.data);
     if (!updatedUser) {
       res.status(404).json({ message: 'User not found' });
       return;
