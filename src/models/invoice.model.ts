@@ -15,9 +15,9 @@ export const invoiceSchema = z.object({
   payment_status: z.enum(['paid', 'unpaid', 'partial'], {
     errorMap: () => ({ message: 'Payment status must be one of: paid, unpaid, partial' }),
   }),
-  voidedAt: z.date().optional(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
+  voided_at: z.date().optional(),
+  created_at: z.date(),
+  updated_at: z.date(),
   client_id: z.string(),
 });
 
@@ -27,7 +27,7 @@ export const invoiceRequestSchema = invoiceSchema.pick({
   due_date: true,
   tax_rate: true,
   tax_invoice_number: true,
-  voidedAt: true,
+  voided_at: true,
   client_id: true,
 });
 
