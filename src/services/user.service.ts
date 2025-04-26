@@ -112,8 +112,10 @@ export const getAllUserService = async () => {
     const users = await prisma.user.findMany();
 
     //parse jadi public schema
-    const parsedUsers = users.map(u => userPublicSchema.parse(u));
-    return parsedUsers;
+    // const parsedUsers = users.map(u => userPublicSchema.parse(u));
+
+    // return parsedUsers;
+    return users;
   } catch (error) {
     console.error('Error fetching users:', error);
     const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
