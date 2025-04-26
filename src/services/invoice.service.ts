@@ -3,6 +3,7 @@ import { prisma } from '@config/db';
 import {
   invoiceWithDetailsRequestSchema,
   type InvoiceUpdateFromPaymentRequestSchema,
+  type InvoiceWithDetailsUpdate,
 } from '@models/invoice.model';
 import type { PrismaClient } from '@prisma/client/extension';
 
@@ -31,6 +32,7 @@ export const getInvoiceByIdService = async (invoice_id: string) => {
       },
       include: {
         client: true,
+        invoice_details: true,
       },
     });
 
@@ -100,52 +102,53 @@ export const createInvoiceService = async (invoiceData: invoiceWithDetailsReques
   }
 };
 
-// export const updateInvoiceByIdService = async (
-//   invoice_id: string,
-//   invoiceData: invoiceWithDetailsRequestSchema,
-// ) => {
-//   try {
-//     const existingDetails = await prisma.invoiceDetail.findMany({
-//       where: { invoice_id: invoice_id },
-//     });
+export const updateInvoiceByIdService = async (
+  invoice_id: string,
+  invoiceData: InvoiceWithDetailsUpdate,
+) => {
+  try {
+    const existingDetails = await prisma.invoiceDetail.findMany({
+      where: { invoice_id: invoice_id },
+    });
 
-//     const incomingDetails = invoiceData.invoice_details;
+    const incomingDetails = invoiceData.invoice_details;
 
-//     for (const detail of incomingDetails) {
-//       if (detail.invoice_detail_id) {
-//         // Cari dan update
-//         await db.invoiceDetails.update({
-//           where: { id: detail.id },
-//           data: {
-//             transaction_note: detail.transaction_note,
-//             delivery_count: detail.delivery_count,
-//             price_per_delivery: detail.price_per_delivery,
-//           },
-//         });
-//       } else {
-//         // Tambah detail baru
-//         await db.invoiceDetails.create({
-//           data: {
-//             ...detail,
-//             invoice_id: invoiceIdFromParams,
-//           },
-//         });
-//       }
-//     }
+    for (const detail of incomingDetails) {
+      if (detail.invoice_detail_id) {
+        await prisma.invoiceDetail.update({
+          where: { invoice_detail_id: detail.invoice_detail_id },
+          data: {
+            transaction_note: detail.transaction_note,
+            delivery_count: detail.delivery_count,
+            price_per_delivery: detail.price_per_delivery,
+          },
+        });
+      } else {
+        const amount = detail.delivery_count * detail.price_per_delivery;
+        await prisma.invoiceDetail.create({
+          data: {
+            ...detail,
+            amount: amount,
+            invoice_id: invoice_id,
+          },
+        });
+      }
+    }
 
-//     const updatedInvoice = await prisma.invoice.update({
-//       where: {
-//         invoice_id,
-//       },
-//       data: invoiceData,
-//     });
-
-//     return updatedInvoice;
-//   } catch (error) {
-//     const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
-//     throw new Error(errorMessage);
-//   }
-// };
+    const incomingIds = incomingDetails
+      .filter(d => d.invoice_detail_id)
+      .map(d => d.invoice_detail_id);
+    const toDelete = existingDetails.filter(d => !incomingIds.includes(d.invoice_detail_id));
+    
+    for (const detail of toDelete) {
+      await prisma.invoiceDetail.delete({ where: { invoice_detail_id: detail.invoice_detail_id } });
+    }
+    return 'Invoice updated successfully';
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
+    throw new Error(errorMessage);
+  }
+};
 
 export const deleteInvoiceByIdService = async (invoice_id: string) => {
   try {

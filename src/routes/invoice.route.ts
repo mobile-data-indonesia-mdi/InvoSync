@@ -4,7 +4,7 @@ import {
   createInvoiceController,
   getAllInvoiceController,
   getInvoiceByIdController,
-  // updateInvoiceByIdController,
+  updateInvoiceByIdController,
   deleteInvoiceByIdController,
 } from '@controllers/invoice.controller';
 
@@ -13,7 +13,7 @@ const router = Router();
 router.get('/', getAllInvoiceController);
 router.get('/:id', getInvoiceByIdController);
 router.post('/', createInvoiceController);
-// router.put('/:id', updateInvoiceByIdController);
+router.put('/:id', updateInvoiceByIdController);
 router.delete('/:id', deleteInvoiceByIdController);
 
 export default router;

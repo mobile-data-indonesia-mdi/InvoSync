@@ -17,8 +17,9 @@ export const invoiceDetailRequestSchema = invoiceDetailSchema.pick({
   price_per_delivery: true,
 });
 
-export const invoiceWithDetailsRequestSchema = invoiceDetailSchema.extend({
-  invoice_id: z.string().uuid().optional(),
+export const invoiceDetailUpdateSchema = invoiceDetailRequestSchema.extend({
+  invoice_detail_id: z.string().uuid().optional(),
 });
 
 export type InvoiceDetailRequest = z.infer<typeof invoiceDetailRequestSchema>;
+export type InvoiceDetailUpdate = z.infer<typeof invoiceDetailUpdateSchema>;

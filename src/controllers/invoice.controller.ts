@@ -3,11 +3,11 @@ import {
   getAllInvoiceService,
   createInvoiceService,
   getInvoiceByIdService,
-  // updateInvoiceByIdService,
+  updateInvoiceByIdService,
   deleteInvoiceByIdService,
 } from '@services/invoice.service';
 import { parseZodError } from '@utils/ResponseHelper';
-import { invoiceWithDetailsRequestSchema } from '@models/invoice.model';
+import { invoiceWithDetailsRequestSchema, invoiceWithDetailsUpdateSchema } from '@models/invoice.model';
 
 export const getAllInvoiceController = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -53,30 +53,30 @@ export const getInvoiceByIdController = async (req: Request, res: Response): Pro
   }
 };
 
-// export const updateInvoiceByIdController = async (req: Request, res: Response): Promise<void> => {
-//   try {
-//     const invoice_id = req.params.id;
+export const updateInvoiceByIdController = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const invoice_id = req.params.id;
 
-//     if (!invoice_id) {
-//       res.status(400).json({ message: 'Invoice ID is required' });
-//       return;
-//     }
+    if (!invoice_id) {
+      res.status(400).json({ message: 'Invoice ID is required' });
+      return;
+    }
 
-//     const validate = await invoiceWithDetailsRequestSchema.safeParseAsync(req.body);
+    const validate = await invoiceWithDetailsUpdateSchema.safeParseAsync(req.body);
 
-//     if (!validate.success) {
-//       const parsed = parseZodError(validate.error);
-//       res.status(400).json(parsed);
-//       return;
-//     }
+    if (!validate.success) {
+      const parsed = parseZodError(validate.error);
+      res.status(400).json(parsed);
+      return;
+    }
 
-//     const invoice = await updateInvoiceByIdService(invoice_id, validate.data);
-//     res.status(200).json(invoice);
-//   } catch (error) {
-//     const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
-//     res.status(500).json({ error: errorMessage });
-//   }
-// };
+    const invoice = await updateInvoiceByIdService(invoice_id, validate.data);
+    res.status(200).json(invoice);
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
+    res.status(500).json({ error: errorMessage });
+  }
+};
 
 export const deleteInvoiceByIdController = async (req: Request, res: Response): Promise<void> => {
   try {
