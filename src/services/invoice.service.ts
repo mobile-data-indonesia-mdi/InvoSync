@@ -107,44 +107,67 @@ export const updateInvoiceByIdService = async (
   invoiceData: InvoiceWithDetailsUpdate,
 ) => {
   try {
-    const existingDetails = await prisma.invoiceDetail.findMany({
-      where: { invoice_id: invoice_id },
+    const updatedInvoice = await prisma.$transaction(async tx => {
+      // Fetch existing details
+      const existingDetails = await tx.invoiceDetail.findMany({
+        where: { invoice_id },
+      });
+
+      const incomingDetails = invoiceData.invoice_details;
+
+      // Update or create incoming details
+      for (const detail of incomingDetails) {
+        if (detail.invoice_detail_id) {
+          await tx.invoiceDetail.update({
+            where: { invoice_detail_id: detail.invoice_detail_id },
+            data: {
+              transaction_note: detail.transaction_note,
+              delivery_count: detail.delivery_count,
+              price_per_delivery: detail.price_per_delivery,
+            },
+          });
+        } else {
+          const amount = detail.delivery_count * detail.price_per_delivery;
+          await tx.invoiceDetail.create({
+            data: {
+              ...detail,
+              amount,
+              invoice_id,
+            },
+          });
+        }
+      }
+
+      // Identify and delete removed details
+      const incomingIds = incomingDetails
+        .filter(d => d.invoice_detail_id)
+        .map(d => d.invoice_detail_id);
+      const toDelete = existingDetails.filter(d => !incomingIds.includes(d.invoice_detail_id));
+
+      for (const detail of toDelete) {
+        await tx.invoiceDetail.delete({ where: { invoice_detail_id: detail.invoice_detail_id } });
+      }
+
+      // Update the invoice itself
+      const updatedInvoice = await tx.invoice.update({
+        where: { invoice_id },
+        data: {
+          invoice_number: invoiceData.invoice_number,
+          issue_date: invoiceData.issue_date,
+          due_date: invoiceData.due_date,
+          tax_rate: invoiceData.tax_rate,
+          tax_invoice_number: invoiceData.tax_invoice_number,
+          voided_at: invoiceData.voided_at,
+          client_id: invoiceData.client_id,
+        },
+      });
+
+      return updatedInvoice;
     });
 
-    const incomingDetails = invoiceData.invoice_details;
-
-    for (const detail of incomingDetails) {
-      if (detail.invoice_detail_id) {
-        await prisma.invoiceDetail.update({
-          where: { invoice_detail_id: detail.invoice_detail_id },
-          data: {
-            transaction_note: detail.transaction_note,
-            delivery_count: detail.delivery_count,
-            price_per_delivery: detail.price_per_delivery,
-          },
-        });
-      } else {
-        const amount = detail.delivery_count * detail.price_per_delivery;
-        await prisma.invoiceDetail.create({
-          data: {
-            ...detail,
-            amount: amount,
-            invoice_id: invoice_id,
-          },
-        });
-      }
-    }
-
-    const incomingIds = incomingDetails
-      .filter(d => d.invoice_detail_id)
-      .map(d => d.invoice_detail_id);
-    const toDelete = existingDetails.filter(d => !incomingIds.includes(d.invoice_detail_id));
-    
-    for (const detail of toDelete) {
-      await prisma.invoiceDetail.delete({ where: { invoice_detail_id: detail.invoice_detail_id } });
-    }
-    return 'Invoice updated successfully';
+    return updatedInvoice;
   } catch (error) {
+    console.error('Error updating invoice:', error);
     const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
     throw new Error(errorMessage);
   }
