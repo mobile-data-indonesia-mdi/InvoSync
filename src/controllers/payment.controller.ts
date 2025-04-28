@@ -109,7 +109,7 @@ export const editPaymentController = async (req: Request, res: Response) => {
       return;
     }
 
-    const payment = await editPaymentService(payment_id, validate.data, req.file!);
+    const payment = await editPaymentService(payment_id, validate.data, req.file);
     res.status(201).json({ message: payment });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';

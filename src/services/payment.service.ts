@@ -156,6 +156,7 @@ export const editPaymentService = async (
       fs.renameSync(oldPath, newPath);  // Rename file secara langsung
 
       newFilePath = newPath; // Update path file
+      paymentData.proof_of_transfer = newFilePath; // Update path file di data payment
     }
 
     const updatedPayment = await prisma.$transaction(async tx => {
