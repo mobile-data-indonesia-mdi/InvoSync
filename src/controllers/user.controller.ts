@@ -28,10 +28,13 @@ import env from '@config/env';
  *             properties:
  *               username:
  *                 type: string
- *                 example: johndoe
+ *                 example: budikuningan
  *               password:
  *                 type: string
- *                 example: password123
+ *                 example: password
+ *               role:
+ *                 type: string
+ *                 example: finance
  *     responses:
  *       201:
  *         description: User registered successfully
@@ -61,6 +64,59 @@ export const registerController = async (req: Request, res: Response): Promise<v
     return;
   }
 };
+
+/**
+ * @openapi
+ * /user/login:
+ *   post:
+ *     summary: Login an existing user
+ *     tags:
+ *       - Auth
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               username:
+ *                 type: string
+ *                 example: budikuningan
+ *               password:
+ *                 type: string
+ *                 example: password
+ *     responses:
+ *       200:
+ *         description: Successfully logged in, cookies set
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Successfully Login
+ *       400:
+ *         description: Invalid input parameters
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Invalid parameters
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Internal server error
+ */
 
 export const loginController = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -100,6 +156,27 @@ export const loginController = async (req: Request, res: Response): Promise<void
   }
 };
 
+/**
+ * @openapi
+ * /user/logout:
+ *   delete:
+ *     summary: Logout the current user and clear cookies
+ *     tags:
+ *       - Auth
+ *     responses:
+ *       204:
+ *         description: Successfully logged out, cookies cleared
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Internal server error
+ */
 export const logoutController = async (_req: Request, res: Response): Promise<void> => {
   try {
     res.clearCookie('accessToken', {
@@ -125,6 +202,46 @@ export const logoutController = async (_req: Request, res: Response): Promise<vo
     return;
   }
 };
+
+/**
+ * @openapi
+ * /user/refresh-token:
+ *   post:
+ *     summary: Refresh the access token using the refresh token
+ *     tags:
+ *       - Auth
+ *     responses:
+ *       200:
+ *         description: Successfully refreshed the access token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Data Successfully updated
+ *       401:
+ *         description: Access denied due to missing or invalid refresh token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Access denied. Please log in first
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Internal server error
+ */
 
 export const refreshTokenController = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -156,6 +273,54 @@ export const refreshTokenController = async (req: Request, res: Response): Promi
   }
 };
 
+/**
+ * @openapi
+ * /user/profile:
+ *   get:
+ *     summary: Get the authenticated user's profile information (username and role)
+ *     tags:
+ *       - Auth
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved the user's profile
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Autentikasi berhasil
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     username:
+ *                       type: string
+ *                       example: budikuningan
+ *                     role:
+ *                       type: string
+ *                       example: finance
+ *       401:
+ *         description: User not authenticated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Internal server error
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Internal server error
+ */
 export const profileController = async (req: Request, res: Response): Promise<void> => {
   if (!req.user) {
     ResponseHelper(res, 'error', 401, 'Internal server error', null);

@@ -5,9 +5,9 @@ const options: swaggerJSDoc.Options = {
   definition: {
     openapi: '3.0.0',
     info: {
-      title: 'My API',
+      title: 'InvoSync REST API',
       version: '1.0.0',
-      description: 'Simple API documentation',
+      description: 'Invoicing Backend',
     },
     servers: [
       {

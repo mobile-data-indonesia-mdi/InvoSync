@@ -10,7 +10,7 @@ import invoiceRoute from '@routes/invoice.route';
 import paymentRoute from '@routes/payment.route';
 import env from '@config/env';
 import corsOptions from '@config/cors';
-import { swaggerSpec } from './config/swagger'; // path ke swagger.ts kamu
+import { swaggerSpec } from '@config/swagger';
 
 const app = express();
 
