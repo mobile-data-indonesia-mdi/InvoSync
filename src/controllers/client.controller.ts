@@ -6,25 +6,24 @@ import {
   editClientByIdService,
   deleteClientByIdService,
 } from '@services/client.service';
-import { parseZodError } from '@utils/ResponseHelper';
+import { parseZodError, ResponseHelper } from '@utils/ResponseHelper';
 import { clientRequestSchema } from '@models/client.model';
 
 export const getAllClientController = async (_req: Request, res: Response): Promise<void> => {
-  console.log('getAllClientController called');
   try {
     const clients = await getAllClientService();
 
     if (!clients || clients.length === 0) {
-      res.status(404).json({ message: 'Client tidak ditemukan' });
+      ResponseHelper(res, 'success', 404, 'No content to display', null);
       return;
     }
 
-    res.status(200).json(clients);
+    ResponseHelper(res, 'success', 200, 'Data successfully retrieved', clients);
     return;
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
 
-    res.status(500).json({ error: errorMessage });
+    ResponseHelper(res, 'error', 500, 'Internal server error', { error: errorMessage });
     return;
   }
 };
@@ -34,19 +33,19 @@ export const createClientController = async (req: Request, res: Response): Promi
 
   if (!validate.success) {
     const parsed = parseZodError(validate.error);
-    res.status(400).json(parsed);
+    ResponseHelper(res, 'error', 400, 'Invalid parameters', parsed);
     return;
   }
 
   try {
     const newClient = await createClientService(validate.data);
 
-    res.status(201).json(newClient);
+    ResponseHelper(res, 'success', 201, 'Data successfully created', newClient);
     return;
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
 
-    res.status(500).json({ error: errorMessage });
+    ResponseHelper(res, 'error', 500, 'Internal server error', { error: errorMessage });
     return;
   }
 };
@@ -55,7 +54,7 @@ export const getClientByIdController = async (req: Request, res: Response): Prom
   const clientId = req.params.id;
 
   if (!clientId) {
-    res.status(400).json({ message: 'User ID is required' });
+    ResponseHelper(res, 'error', 400, 'Invalid parameters', null);
     return;
   }
 
@@ -63,16 +62,16 @@ export const getClientByIdController = async (req: Request, res: Response): Prom
     const client = await getClientByIdService(clientId);
 
     if (!client) {
-      res.status(404).json({ message: 'Client tidak ditemukan' });
+      ResponseHelper(res, 'success', 404, 'No content to display', null);
       return;
     }
 
-    res.status(200).json(client);
+    ResponseHelper(res, 'success', 200, 'Data successfully retrieved', client);
     return;
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
 
-    res.status(500).json({ error: errorMessage });
+    ResponseHelper(res, 'error', 500, 'Internal server error', { error: errorMessage });
     return;
   }
 };
@@ -81,7 +80,7 @@ export const editClientByIdController = async (req: Request, res: Response): Pro
   const clientId = req.params.id;
 
   if (!clientId) {
-    res.status(400).json({ message: 'User ID is required' });
+    ResponseHelper(res, 'error', 400, 'Invalid parameters', null);
     return;
   }
 
@@ -89,39 +88,41 @@ export const editClientByIdController = async (req: Request, res: Response): Pro
 
   if (!validate.success) {
     const parsed = parseZodError(validate.error);
-    res.status(400).json(parsed);
+    ResponseHelper(res, 'error', 400, 'Invalid parameters', parsed);
     return;
   }
 
   try {
     const updatedClient = await editClientByIdService(clientId, validate.data);
 
-    res.status(200).json(updatedClient);
+    ResponseHelper(res, 'success', 200, 'Data Successfully updated', updatedClient);
     return;
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
 
-    res.status(500).json({ error: errorMessage });
+    ResponseHelper(res, 'error', 500, 'Internal server error', { error: errorMessage });
     return;
   }
 };
+
 export const deleteClientByIdController = async (req: Request, res: Response): Promise<void> => {
   const clientId = req.params.id;
 
   if (!clientId) {
-    res.status(400).json({ message: 'User ID is required' });
+    ResponseHelper(res, 'success', 400, 'Invalid parameters', null);
     return;
   }
 
   try {
     const deletedClient = await deleteClientByIdService(clientId);
 
-    res.status(200).json(deletedClient);
+    // Menggunakan ResponseHelper untuk konsistensi response
+    ResponseHelper(res, 'success', 204, 'Data successfully deleted', deletedClient);
     return;
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
 
-    res.status(500).json({ error: errorMessage });
+    ResponseHelper(res, 'error', 500, 'Internal server error', { error: errorMessage });
     return;
   }
 };
