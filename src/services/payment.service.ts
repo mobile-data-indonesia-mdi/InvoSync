@@ -53,7 +53,7 @@ export const createPaymentService = async (paymentData: PaymentRequestSchema) =>
 
     return createdPayment;
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     throw new Error(errorMessage);
   }
 };
@@ -69,7 +69,7 @@ export const getAllPaymentService = async () => {
     return payment;
   } catch (error) {
     console.error('Error fetching invoices:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     throw new Error(errorMessage);
   }
 };
@@ -91,7 +91,7 @@ export const getPaymentByClientService = async (client_id: string) => {
     return payment;
   } catch (error) {
     console.error('Error fetching invoices:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     throw new Error(errorMessage);
   }
 };
@@ -111,7 +111,7 @@ export const getPaymentByIdService = async (payment_id: string) => {
     return payment;
   } catch (error) {
     console.error('Error fetching invoices:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     throw new Error(errorMessage);
   }
 };
@@ -140,7 +140,7 @@ export const editPaymentService = async (
 
     return updatedPayment;
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     throw new Error(errorMessage);
   }
 };
@@ -165,7 +165,7 @@ export const deletePaymentByIdService = async (payment_id: string) => {
 
     return deletedPayment;
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     throw new Error(errorMessage);
   }
 };
@@ -191,7 +191,7 @@ export const restorePaymentService = async (payment_id: string) => {
 
     return voidPayment;
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     throw new Error(errorMessage);
   }
 };

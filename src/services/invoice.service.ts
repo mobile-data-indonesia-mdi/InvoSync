@@ -19,7 +19,7 @@ export const getAllInvoiceService = async () => {
     return invoices;
   } catch (error) {
     console.error('Error fetching invoices:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     throw new Error(errorMessage);
   }
 };
@@ -42,7 +42,7 @@ export const getInvoiceByIdService = async (invoice_id: string) => {
 
     return invoice;
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     throw new Error(errorMessage);
   }
 };
@@ -168,7 +168,7 @@ export const updateInvoiceByIdService = async (
     return updatedInvoice;
   } catch (error) {
     console.error('Error updating invoice:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     throw new Error(errorMessage);
   }
 };
@@ -194,7 +194,7 @@ export const deleteInvoiceByIdService = async (invoice_id: string) => {
     return deletedInvoice;
     // return deletedInvoice;
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     throw new Error(errorMessage);
   }
 };
@@ -219,7 +219,7 @@ export const getInvoiceForPaymentService = async (invoice_id: string) => {
 
     return invoice;
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     throw new Error(errorMessage);
   }
 };
@@ -249,7 +249,7 @@ export const updateInvoiceForPaymentService = async (
 
     return updatedInvoice;
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     throw new Error(errorMessage);
   }
 };
