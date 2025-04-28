@@ -1,33 +1,21 @@
 import { prisma } from '@config/db';
-import type { PaymentRequestSchema, PaymentUpdateRequestSchema } from '@models/payment.model';
+import { type PaymentRequestSchema, type PaymentUpdateRequestSchema } from '@models/payment.model';
+import type { Prisma } from '@prisma/client';
 import {
-  getInvoiceForPaymentService,
-  updateInvoiceForPaymentService,
+  getPaymentStatusService,
+  updateInvoiceAmountPaidService
 } from '@services/invoice.service';
+import fs from 'fs';
+import path from 'path';
 
-export const createPaymentService = async (paymentData: PaymentRequestSchema) => {
+export const createPaymentService = async (
+  paymentData: PaymentRequestSchema, 
+  file: Express.Multer.File | undefined
+) => {
   try {
-    const invoiceData = getInvoiceForPaymentService(paymentData.invoice_id);
-    if ((await invoiceData).payment_status == 'paid') {
+    const invoiceData = await getPaymentStatusService(paymentData.invoice_id);
+    if (invoiceData.payment_status === 'paid') {
       throw new Error(`Client sudah membayar semua tagihan pada invoice ${paymentData.invoice_id}`);
-    }
-
-    // Hitung uang yang sudah dibayar
-    const newest_amount_paid = (await invoiceData).amount_paid + paymentData.amount_paid;
-    const remaining_balance = (await invoiceData).total - newest_amount_paid;
-    let updated_payment_status = '';
-    if (remaining_balance > 0) {
-      if (remaining_balance == (await invoiceData).total) {
-        updated_payment_status = 'unpaid';
-      }
-      updated_payment_status = 'partial';
-    } else if (remaining_balance == 0) {
-      updated_payment_status = 'paid';
-    } else {
-      // lebih bayar
-      throw new Error(
-        `Pembayaran melebihi total tagihan (lebih bayar sebesar Rp${Math.abs(remaining_balance)})`,
-      );
     }
 
     const createdPayment = await prisma.$transaction(async tx => {
@@ -41,17 +29,32 @@ export const createPaymentService = async (paymentData: PaymentRequestSchema) =>
           invoice_id: paymentData.invoice_id,
         },
       });
-      // Update table invoices
-      const updateData = {
-        amount_paid: newest_amount_paid,
-        payment_status: updated_payment_status as 'paid' | 'unpaid' | 'partial',
-      };
-      await updateInvoiceForPaymentService(tx, paymentData.invoice_id, updateData);
 
+      // Update invoice amount paid and payment status
+      await updateInvoiceAmountPaidService(tx, paymentData.invoice_id);
+      
       return payment;
     });
 
-    return createdPayment;
+    // Ganti nama file dengan payment_id
+    if (file && createdPayment.payment_id) {
+      const fs = require('fs');
+      const path = require('path');
+      const oldPath = file.path;
+      const extension = file.mimetype.split('/')[1]; // Ambil ekstensi file
+      const newPath = path.join(path.dirname(oldPath), `${createdPayment.payment_id}.${extension}`);
+
+      // Rename file untuk menggunakan payment_id
+      fs.rename(oldPath, newPath, (err: Error) => {
+        if (err) {
+          console.error('Error renaming file:', err);
+        }
+      });
+      
+      await updatePaymentProofOfTransferService(createdPayment.payment_id, newPath);
+    }
+    
+    return await getPaymentByIdService(createdPayment.payment_id);;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
     throw new Error(errorMessage);
@@ -98,7 +101,7 @@ export const getPaymentByClientService = async (client_id: string) => {
 
 export const getPaymentByIdService = async (payment_id: string) => {
   try {
-    const payment = await prisma.payment.findMany({
+    const payment = await prisma.payment.findUnique({
       where: {
         payment_id,
       },
@@ -119,7 +122,76 @@ export const getPaymentByIdService = async (payment_id: string) => {
 export const editPaymentService = async (
   payment_id: string,
   paymentData: PaymentUpdateRequestSchema,
+  file: Express.Multer.File | undefined
 ) => {
+  try {
+    const payment = await prisma.payment.findUnique({
+      where: { payment_id },
+    });
+
+    if (!payment) {
+      throw new Error('Payment tidak ditemukan');
+    }
+
+    const { 
+      amount_paid: oldAmountPaid, 
+      invoice_id: oldInvoiceId, 
+      voided_at: oldVoidedAt, 
+      proof_of_transfer: oldProofOfTransfer } = payment;
+    const newAmountPaid = paymentData.amount_paid ?? oldAmountPaid;
+    const newInvoiceId = paymentData.invoice_id ?? oldInvoiceId;
+    const newVoidedAt = paymentData.hasOwnProperty('voided_at') ? paymentData.voided_at : oldVoidedAt;
+
+    const voidStatusChanged = oldVoidedAt !== newVoidedAt;
+    const invoiceIdChanged = oldInvoiceId !== newInvoiceId;
+    const amountPaidChanged = oldAmountPaid !== newAmountPaid;
+
+    let newFilePath: string | undefined = oldProofOfTransfer;
+
+    if (file) {
+      // Jika ada file baru yang diunggah, ganti nama file menjadi payment_id
+      const oldPath = file.path;
+      const extension = file.mimetype.split('/')[1]; // Ambil ekstensi file
+      const newPath = path.join(path.dirname(oldPath), `${payment_id}.${extension}`);
+      fs.renameSync(oldPath, newPath);  // Rename file secara langsung
+
+      newFilePath = newPath; // Update path file
+      paymentData.proof_of_transfer = newFilePath; // Update path file di data payment
+    }
+
+    const updatedPayment = await prisma.$transaction(async tx => {
+      const updateData: Prisma.PaymentUpdateInput = { ...paymentData };
+
+      if (amountPaidChanged || invoiceIdChanged || voidStatusChanged) {
+        await tx.payment.update({ where: { payment_id }, data: updateData });
+
+        if (invoiceIdChanged) {
+          await updateInvoiceAmountPaidService(tx, oldInvoiceId);
+          await updateInvoiceAmountPaidService(tx, newInvoiceId);
+        } else {
+          await updateInvoiceAmountPaidService(tx, oldInvoiceId);
+        }
+      } else {
+        await tx.payment.update({ where: { payment_id }, data: updateData });
+      }
+
+      return tx.payment.findUnique({ where: { payment_id } });
+    });
+
+    // Jika ada file lama yang harus dihapus
+    if (newFilePath && oldProofOfTransfer !== newFilePath) {
+      const oldFilePath = path.resolve(oldProofOfTransfer);
+      fs.unlinkSync(oldFilePath); // Hapus file lama secara sinkron
+    }
+
+    return updatedPayment;
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
+    throw new Error(errorMessage);
+  }
+};
+
+export const deletePaymentByIdService = async (payment_id: string) => {
   try {
     const payment = await prisma.payment.findUnique({
       where: {
@@ -131,37 +203,34 @@ export const editPaymentService = async (
       throw new Error('Payment tidak ditemukan');
     }
 
-    const updatedPayment = await prisma.payment.update({
-      where: {
-        payment_id,
-      },
-      data: paymentData,
+    const invoiceID = payment.invoice_id;
+    const proofOfTransferPath = payment.proof_of_transfer;
+
+    // Hapus payment dari database
+    const deletedPayment = await prisma.$transaction(async tx => {
+      const deleted = await tx.payment.delete({
+        where: { payment_id },
+      });
+      await updateInvoiceAmountPaidService(tx, invoiceID);
+
+      return deleted;
     });
 
-    return updatedPayment;
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
-    throw new Error(errorMessage);
-  }
-};
-
-export const deletePaymentByIdService = async (payment_id: string) => {
-  try {
-    const invoice = await prisma.payment.findUnique({
-      where: {
-        payment_id,
-      },
-    });
-
-    if (!invoice) {
-      throw new Error('Payment tidak ditemukan');
+    // Menghapus file proof_of_transfer
+    if (proofOfTransferPath) {
+      const filePath = path.resolve(proofOfTransferPath);
+      if (fs.existsSync(filePath)) {
+        fs.unlink(filePath, (err) => {
+          if (err) {
+            console.error('Error deleting file:', err);
+          } else {
+            console.log(`File deleted: ${filePath}`);
+          }
+        });
+      } else {
+        console.warn(`File not found at: ${filePath}`);
+      }
     }
-
-    const deletedPayment = await prisma.payment.delete({
-      where: {
-        payment_id,
-      },
-    });
 
     return deletedPayment;
   } catch (error) {
@@ -182,16 +251,30 @@ export const restorePaymentService = async (payment_id: string) => {
       throw new Error('Payment tidak ditemukan');
     }
 
-    const voidPayment = await prisma.payment.update({
-      where: { payment_id },
-      data: {
-        voided_at: null,
-      },
+    const invoiceID = payment.invoice_id;
+
+    const restorePayment = await prisma.$transaction(async tx => {
+      const restore = await prisma.payment.update({
+        where: { payment_id },
+        data: {
+          voided_at: null,
+        },
+      });
+      updateInvoiceAmountPaidService(tx, invoiceID);
+      return restore;
     });
 
-    return voidPayment;
+    return restorePayment;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
     throw new Error(errorMessage);
   }
+};
+
+// Update proof_of_transfer di database
+export const updatePaymentProofOfTransferService = async (payment_id: string, newPath: string): Promise<void> => {
+  await prisma.payment.update({
+    where: { payment_id },
+    data: { proof_of_transfer: newPath }
+  });
 };
