@@ -6,8 +6,7 @@ import {
   getPaymentByClientService,
   getPaymentByIdService,
   editPaymentService,
-  deletePaymentByIdService,
-  updatePaymentProofOfTransferService
+  deletePaymentByIdService
   // restorePaymentService,
 } from '@services/payment.service';
 import { parseZodError } from '@utils/ResponseHelper';
@@ -126,7 +125,7 @@ export const deletePaymentController = async (req: Request, res: Response) => {
       return;
     }
 
-    const payment = await deletePaymentByIdService(payment_id);
+    await deletePaymentByIdService(payment_id);
     res.status(201).json({ message: "Payment berhasil dihapus" });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
