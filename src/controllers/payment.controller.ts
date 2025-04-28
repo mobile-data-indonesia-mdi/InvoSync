@@ -38,7 +38,7 @@ export const createPaymentController = async (req: CustomRequest, res: Response)
 
     res.status(201).json({ message: payment });
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     res.status(500).json({ error: errorMessage });
   }
 };
@@ -48,7 +48,7 @@ export const getAllPaymentController = async (req: Request, res: Response) => {
     const payment = await getAllPaymentService();
     res.status(201).json({ message: payment });
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     res.status(500).json({ error: errorMessage });
   }
 };
@@ -65,7 +65,7 @@ export const getPaymentByClientController = async (req: Request, res: Response) 
     const payment = await getPaymentByClientService(clientId);
     res.status(201).json({ message: payment });
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     res.status(500).json({ error: errorMessage });
   }
 };
@@ -82,7 +82,7 @@ export const getPaymentByIdController = async (req: Request, res: Response) => {
     const payment = await getPaymentByIdService(payment_id);
     res.status(201).json({ message: payment });
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     res.status(500).json({ error: errorMessage });
   }
 };
@@ -111,7 +111,7 @@ export const editPaymentController = async (req: Request, res: Response) => {
     const payment = await editPaymentService(payment_id, validate.data, req.file);
     res.status(201).json({ message: payment });
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     res.status(500).json({ error: errorMessage });
   }
 };
@@ -145,7 +145,7 @@ export const deletePaymentController = async (req: Request, res: Response) => {
 //     const voidPayment = await restorePaymentService(payment_id);
 //     res.status(200).json({ message: 'Payment berhasil direstore' });
 //   } catch (error) {
-//     const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
+//     const errorMessage = error instanceof Error ? error.message : 'Internal server error';
 //     res.status(500).json({ error: errorMessage });
 //   }
 // };

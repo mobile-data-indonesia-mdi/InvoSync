@@ -7,8 +7,21 @@ export const getAllClientService = async () => {
 
     return clients;
   } catch (error) {
-    console.error('Error fetching clients:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
+    throw new Error(errorMessage);
+  }
+};
+
+export const createClientService = async (clientData: ClientRequest) => {
+  try {
+    const client = await prisma.client.create({
+      data: clientData,
+    });
+
+    return client;
+  } catch (error) {
+    console.error('Error creating client:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     throw new Error(errorMessage);
   }
 };
@@ -23,21 +36,7 @@ export const getClientByIdService = async (client_id: string) => {
 
     return client;
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
-    throw new Error(errorMessage);
-  }
-};
-
-export const createClientService = async (clientData: ClientRequest) => {
-  try {
-    const client = await prisma.client.create({
-      data: clientData,
-    });
-
-    return client;
-  } catch (error) {
-    console.error('Error creating client:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     throw new Error(errorMessage);
   }
 };
@@ -51,7 +50,7 @@ export const editClientByIdService = async (client_id: string, clientData: Clien
     });
 
     if (!client) {
-      throw new Error('Client tidak ditemukan');
+      throw new Error('Data not found');
     }
 
     const updatedClient = await prisma.client.update({
@@ -63,8 +62,9 @@ export const editClientByIdService = async (client_id: string, clientData: Clien
 
     return updatedClient;
   } catch (error) {
+    // Logging error yang lebih terstruktur bisa dipertimbangkan
     console.error('Error updating client:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     throw new Error(errorMessage);
   }
 };
@@ -78,7 +78,7 @@ export const deleteClientByIdService = async (client_id: string) => {
     });
 
     if (!client) {
-      throw new Error('Client tidak ditemukan');
+      throw new Error('Data not found');
     }
 
     await prisma.client.delete({
@@ -90,7 +90,7 @@ export const deleteClientByIdService = async (client_id: string) => {
     return { message: 'Client deleted successfully' };
   } catch (error) {
     console.error('Error deleting client:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     throw new Error(errorMessage);
   }
 };
