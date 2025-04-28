@@ -48,14 +48,16 @@ export const loginController = async (req: Request, res: Response): Promise<void
 
     res.cookie('accessToken', accessToken, {
       httpOnly: true,
-      secure: env.NODE_ENV === 'production',
+      // secure: env.NODE_ENV === 'production',
+      secure: true,
       maxAge: ms(env.JWT_SECRET_ACCESS_LIFETIME as ms.StringValue),
       sameSite: 'none',
     });
 
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
-      secure: env.NODE_ENV === 'production',
+      // secure: env.NODE_ENV === 'production',
+      secure: true,
       maxAge: ms(env.JWT_SECRET_REFRESH_LIFETIME as ms.StringValue),
       sameSite: 'none',
     });
@@ -74,13 +76,15 @@ export const logoutController = async (_req: Request, res: Response): Promise<vo
   try {
     res.clearCookie('accessToken', {
       httpOnly: true,
-      secure: env.NODE_ENV === 'production',
+      // secure: env.NODE_ENV === 'production',
+      secure: true,
       sameSite: 'none',
     });
 
     res.clearCookie('refreshToken', {
       httpOnly: true,
-      secure: env.NODE_ENV === 'production',
+      // secure: env.NODE_ENV === 'production',
+      secure: true,
       sameSite: 'none',
     });
 
@@ -108,7 +112,8 @@ export const refreshTokenController = async (req: Request, res: Response): Promi
 
     res.cookie('accessToken', newAccessToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      // secure: process.env.NODE_ENV === 'production',
+      secure: true,
       maxAge: ms(env.JWT_SECRET_ACCESS_LIFETIME as ms.StringValue),
       sameSite: 'strict',
     });
@@ -121,6 +126,21 @@ export const refreshTokenController = async (req: Request, res: Response): Promi
     ResponseHelper(res, 'error', 500, 'Internal server error', { error: errorMessage });
     return;
   }
+};
+
+export const profileController = async (req: Request, res: Response): Promise<void> => {
+  if (!req.user) {
+    ResponseHelper(res, 'error', 401, 'Internal server error', null);
+    return;
+  }
+
+  const user = req.user;
+
+  res.status(200).json({
+    message: 'Autentikasi berhasil',
+    data: user,
+  });
+  return;
 };
 
 export const getAllUserController = async (_req: Request, res: Response): Promise<void> => {

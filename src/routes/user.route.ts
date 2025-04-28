@@ -5,6 +5,7 @@ import {
   loginController,
   refreshTokenController,
   logoutController,
+  profileController,
   getAllUserController,
   getUserByIdController,
   editUserByIdController,
@@ -20,6 +21,7 @@ router.post('/refresh-token', refreshTokenController);
 router.delete('/logout', logoutController);
 
 //authenticated routes
+router.get("/profile", authGuard, profileController);
 // router.post('/register', authGuard, roleGuard(['management']), registerController); //ini buat nanti
 router.get('/', authGuard, roleGuard(['management']), getAllUserController);
 router.get('/:id', authGuard, roleGuard(['management']), getUserByIdController);
