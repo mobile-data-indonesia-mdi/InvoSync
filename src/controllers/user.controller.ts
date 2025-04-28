@@ -12,6 +12,34 @@ import { parseZodError, ResponseHelper } from 'src/utils/ResponseHelper';
 import ms from 'ms';
 import env from '@config/env';
 
+/**
+ * @openapi
+ * /user/register:
+ *   post:
+ *     summary: Register a new user
+ *     tags:
+ *       - Auth
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               username:
+ *                 type: string
+ *                 example: johndoe
+ *               password:
+ *                 type: string
+ *                 example: password123
+ *     responses:
+ *       201:
+ *         description: User registered successfully
+ *       400:
+ *         description: Invalid input parameters
+ *       500:
+ *         description: Internal server error
+ */
 export const registerController = async (req: Request, res: Response): Promise<void> => {
   try {
     const validate = await userRequestSchema.safeParseAsync(req.body);
