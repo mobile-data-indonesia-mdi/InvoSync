@@ -6,19 +6,25 @@ import {
   updateInvoiceByIdService,
   deleteInvoiceByIdService,
 } from '@services/invoice.service';
-import { parseZodError } from '@utils/ResponseHelper';
+import { parseZodError, ResponseHelper } from '@utils/ResponseHelper';
 import {
   invoiceWithDetailsRequestSchema,
   invoiceWithDetailsUpdateSchema,
 } from '@models/invoice.model';
+import { ZodError } from 'zod';
 
 export const getAllInvoiceController = async (req: Request, res: Response): Promise<void> => {
   try {
     const invoices = await getAllInvoiceService();
-    res.status(200).json(invoices);
+    return ResponseHelper(res, 'success', 200,  'Data successfully retrieved', invoices);
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
-    res.status(500).json({ error: errorMessage });
+    if (error instanceof ZodError) {
+      const formattedError = parseZodError(error);
+      return ResponseHelper(res, 'error', 400,  'Invalid parameters', formattedError);
+    } else {
+      const errorMessage = error instanceof Error ? error.message : 'Internal server error';
+      return ResponseHelper(res, 'error', 500,  'Internal server error', { error: errorMessage });
+    }
   }
 };
 
@@ -28,15 +34,19 @@ export const createInvoiceController = async (req: Request, res: Response): Prom
 
     if (!validate.success) {
       const parsed = parseZodError(validate.error);
-      res.status(400).json(parsed);
-      return;
+      return ResponseHelper(res, 'error', 400,  'Invalid parameters', parsed);
     }
 
     const invoice = await createInvoiceService(validate.data);
-    res.status(201).json({ message: invoice });
+    return ResponseHelper(res, 'success', 201,  'Data successfully created', invoice);
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
-    res.status(500).json({ error: errorMessage });
+    if (error instanceof ZodError) {
+      const formattedError = parseZodError(error);
+      return ResponseHelper(res, 'error', 400,  'Invalid parameters', formattedError);
+    } else {
+      const errorMessage = error instanceof Error ? error.message : 'Internal server error';
+      return ResponseHelper(res, 'error', 500,  'Internal server error', { error: errorMessage });
+    }
   }
 };
 
@@ -44,15 +54,21 @@ export const getInvoiceByIdController = async (req: Request, res: Response): Pro
   try {
     const invoice_id = req.params.id;
     if (!invoice_id) {
-      res.status(400).json({ message: 'Invoice ID is required' });
-      return;
+      return ResponseHelper(res, 'error', 400, 'Invalid parameters', {
+        message: 'Invoice ID is required',
+      });
     }
 
     const invoice = await getInvoiceByIdService(invoice_id);
-    res.status(200).json(invoice);
+    return ResponseHelper(res, 'success', 200,  'Data successfully retrieved', invoice);
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
-    res.status(500).json({ error: errorMessage });
+    if (error instanceof ZodError) {
+      const formattedError = parseZodError(error);
+      return ResponseHelper(res, 'error', 400,  'Invalid parameters', formattedError);
+    } else {
+      const errorMessage = error instanceof Error ? error.message : 'Internal server error';
+      return ResponseHelper(res, 'error', 500,  'Internal server error', { error: errorMessage });
+    }
   }
 };
 
@@ -61,23 +77,28 @@ export const updateInvoiceByIdController = async (req: Request, res: Response): 
     const invoice_id = req.params.id;
 
     if (!invoice_id) {
-      res.status(400).json({ message: 'Invoice ID is required' });
-      return;
+      return ResponseHelper(res, 'error', 400, 'Invalid parameters', {
+        message: 'Invoice ID is required',
+      });
     }
 
     const validate = await invoiceWithDetailsUpdateSchema.safeParseAsync(req.body);
 
     if (!validate.success) {
       const parsed = parseZodError(validate.error);
-      res.status(400).json(parsed);
-      return;
+      return ResponseHelper(res, 'error', 400,  'Invalid parameters', parsed);
     }
 
     const invoice = await updateInvoiceByIdService(invoice_id, validate.data);
-    res.status(200).json(invoice);
+    return ResponseHelper(res, 'success', 200,  'Data Successfully updated', invoice);
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
-    res.status(500).json({ error: errorMessage });
+    if (error instanceof ZodError) {
+      const formattedError = parseZodError(error);
+      return ResponseHelper(res, 'error', 400,  'Invalid parameters', formattedError);
+    } else {
+      const errorMessage = error instanceof Error ? error.message : 'Internal server error';
+      return ResponseHelper(res, 'error', 500,  'Internal server error', { error: errorMessage });
+    }
   }
 };
 
@@ -85,13 +106,20 @@ export const deleteInvoiceByIdController = async (req: Request, res: Response): 
   try {
     const invoice_id = req.params.id;
     if (!invoice_id) {
-      res.status(400).json({ message: 'Invoice ID is required' });
-      return;
+      return ResponseHelper(res, 'error', 400, 'Invalid parameters', {
+        message: 'Invoice ID is required',
+      });
     }
     await deleteInvoiceByIdService(invoice_id);
     res.status(204).send();
+    return ResponseHelper(res, 'success', 204,  'Data successfully deleted', null);
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
-    res.status(500).json({ error: errorMessage });
+    if (error instanceof ZodError) {
+      const formattedError = parseZodError(error);
+      return ResponseHelper(res, 'error', 400,  'Invalid parameters', formattedError);
+    } else {
+      const errorMessage = error instanceof Error ? error.message : 'Internal server error';
+      return ResponseHelper(res, 'error', 500,  'Internal server error', { error: errorMessage });
+    }
   }
 };
