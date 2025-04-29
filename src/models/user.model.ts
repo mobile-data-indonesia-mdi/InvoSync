@@ -21,8 +21,8 @@ export const userSchema = z.object({
   role: z.enum(['management', 'finance'], {
     errorMap: () => ({ message: 'Role harus salah satu dari: management, finance, it, admin' }),
   }),
-  createdAt: z.date(),
-  updatedAt: z.date(),
+  created_at: z.date(),
+  updated_at: z.date(),
 });
 
 export const userRequestSchema = userSchema.pick({
@@ -38,14 +38,12 @@ export const userLoginSchema = userSchema.pick({
 
 export const userPublicSchema = userSchema.omit({
   password: true,
-  createdAt: true,
-  updatedAt: true,
 });
 
 export const userChangePassword = userSchema.pick({
   password: true,
-  createdAt: true,
-  updatedAt: true,
+  created_at: true,
+  updated_at: true,
 });
 
 export type UserRequest = z.infer<typeof userRequestSchema>;

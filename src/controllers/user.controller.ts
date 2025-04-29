@@ -117,7 +117,6 @@ export const registerController = async (req: Request, res: Response): Promise<v
  *                   type: string
  *                   example: Internal server error
  */
-
 export const loginController = async (req: Request, res: Response): Promise<void> => {
   try {
     const validate = await userLoginSchema.safeParseAsync(req.body);
@@ -242,7 +241,6 @@ export const logoutController = async (_req: Request, res: Response): Promise<vo
  *                   type: string
  *                   example: Internal server error
  */
-
 export const refreshTokenController = async (req: Request, res: Response): Promise<void> => {
   try {
     console.log('Masuk ke refresh token controller');
@@ -355,6 +353,45 @@ export const getAllUserController = async (_req: Request, res: Response): Promis
   }
 };
 
+/**
+ * @openapi
+ * /user/{id}:
+ *   get:
+ *     summary: Retrieve user by ID
+ *     tags:
+ *       - User
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: The ID of the user to retrieve
+ *         schema:
+ *           type: string
+ *           example: '123456'
+ *     responses:
+ *       200:
+ *         description: Data successfully retrieved
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: string
+ *                   example: '123456'
+ *                 username:
+ *                   type: string
+ *                   example: 'budikuningan'
+ *                 role:
+ *                   type: string
+ *                   example: 'finance'
+ *       400:
+ *         description: Invalid parameters
+ *       404:
+ *         description: Data not found
+ *       500:
+ *         description: Internal server error
+ */
 export const getUserByIdController = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = req.params.id;
@@ -381,6 +418,61 @@ export const getUserByIdController = async (req: Request, res: Response): Promis
   }
 };
 
+/**
+ * @openapi
+ * /user/{id}:
+ *   put:
+ *     summary: Update user details by ID
+ *     tags:
+ *       - User
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: The ID of the user to update
+ *         schema:
+ *           type: string
+ *           example: '123456'
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               username:
+ *                 type: string
+ *                 example: 'budikuningan'
+ *               password:
+ *                 type: string
+ *                 example: 'newpassword'
+ *               role:
+ *                 type: string
+ *                 example: 'admin'
+ *     responses:
+ *       200:
+ *         description: Data successfully updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: string
+ *                   example: '123456'
+ *                 username:
+ *                   type: string
+ *                   example: 'budikuningan'
+ *                 role:
+ *                   type: string
+ *                   example: 'admin'
+ *       400:
+ *         description: Invalid parameters
+ *       404:
+ *         description: User not found or no content to display
+ *       500:
+ *         description: Internal server error
+ */
 export const editUserByIdController = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = req.params.id;

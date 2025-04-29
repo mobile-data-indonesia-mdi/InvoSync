@@ -6,6 +6,8 @@
     "bcryptjs": "^3.0.2",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
+    "date-fns": "^4.1.0",
+    "date-fns-tz": "^3.2.0",
     "express": "^5.1.0",
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
@@ -22,6 +24,7 @@
     "lint": "eslint . --ext .ts",
     "prettier": "prettier --write .",
     "start": "bun run build && bun dist/index.js",
+    "jest": "bunx jest",
     "migrate": "bunx prisma migrate dev",
     "migrate:reset": "bunx prisma migrate reset --force"
   },
@@ -44,6 +47,7 @@
     "prettier": "^3.5.3",
     "prisma": "^6.6.0",
     "supertest": "^7.1.0",
+    "ts-jest": "^29.3.2",
     "tsx": "^4.19.3",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.30.1"

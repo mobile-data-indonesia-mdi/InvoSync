@@ -108,7 +108,11 @@ export const refreshTokenService = async (refreshToken: string) => {
 export const getAllUserService = async () => {
   try {
     const users = await prisma.user.findMany();
-    return users;
+
+    const parsedUsers = users.map(user => userPublicSchema.parse(user));
+
+    return parsedUsers;
+    // return users;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     throw new Error(errorMessage);
@@ -163,7 +167,10 @@ export const editUserByIdService = async (user_id: string, userData: UserRequest
       },
     });
 
-    return updatedUser;
+    // Parse updated user data into a public schema
+    const parsedUser = userPublicSchema.parse(updatedUser);
+
+    return parsedUser;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     throw new Error(errorMessage);
