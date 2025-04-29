@@ -28,9 +28,11 @@ export const createInvoiceController = async (req: Request, res: Response): Prom
     if (error instanceof ZodError) {
       const formattedError = parseZodError(error);
       ResponseHelper(res, 'error', 400, 'Invalid parameters', formattedError);
+      return;
     } else {
       const errorMessage = error instanceof Error ? error.message : 'Internal server error';
       ResponseHelper(res, 'error', 500, 'Internal server error', { error: errorMessage });
+      return;
     }
   }
 };
