@@ -35,14 +35,12 @@ export const createPaymentService = async (
 
     // Ganti nama file dengan payment_id
     if (file && createdPayment.payment_id) {
-      const fs = require('fs');
-      const path = require('path');
       const oldPath = file.path;
       const extension = file.mimetype.split('/')[1]; // Ambil ekstensi file
       const newPath = path.join(path.dirname(oldPath), `${createdPayment.payment_id}.${extension}`);
 
       // Rename file untuk menggunakan payment_id
-      fs.rename(oldPath, newPath, (err: Error) => {
+      fs.rename(oldPath, newPath, (err: NodeJS.ErrnoException | null) => {
         if (err) {
           console.error('Error renaming file:', err);
         }
