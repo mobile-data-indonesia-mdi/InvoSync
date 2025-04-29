@@ -6,10 +6,13 @@ import {
   getPaymentByClientService,
   getPaymentByIdService,
   editPaymentService,
-  deletePaymentByIdService
+  deletePaymentByIdService,
+  getProofPaymentService
   // restorePaymentService,
 } from '@services/payment.service';
 import { parseZodError } from '@utils/ResponseHelper';
+import path from 'path';
+import fs from 'fs';
 
 interface CustomRequest extends Request {
   file?: Express.Multer.File;
@@ -132,6 +135,42 @@ export const deletePaymentController = async (req: Request, res: Response) => {
     res.status(500).json({ error: errorMessage });
   }
 };
+
+export const getProofPaymentController = async (req: Request, res: Response) => {
+  try {
+    const filename = req.params.filename;
+    if (!filename) {
+      res.status(400).json({ message: 'Payment  is required' });
+      return;
+    }
+
+    const filePath = await getProofPaymentService(filename);
+    const safePath = path.resolve(filePath);
+    const baseDir = path.resolve('uploads', 'payments');
+
+     // Validasi agar file berada dalam folder yang benar (mencegah directory traversal)
+    if (!safePath.startsWith(baseDir)) {
+      res.status(403).json({ message: 'Access forbidden' });
+    }
+    
+    // Periksa apakah file ada
+    if (!fs.existsSync(safePath)) {
+      res.status(404).json({ message: 'File not found' });
+    }
+
+    res.sendFile(filePath, (err) => {
+      if (err) {
+        console.error('Error sending file:', err);
+        res.status(500).json({ message: 'Error sending file' });
+      }
+    });
+  }
+  catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
+    res.status(500).json({ error: errorMessage });
+  }
+}
+
 
 // export const restorePaymentController = async (req: Request, res: Response) => {
 //   try {

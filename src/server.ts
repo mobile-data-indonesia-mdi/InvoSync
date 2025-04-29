@@ -9,6 +9,7 @@ import invoiceRoute from '@routes/invoice.route';
 import paymentRoute from '@routes/payment.route';
 import env from '@config/env';
 import corsOptions from '@config/cors';
+//import path from 'path';
 
 const app = express();
 
