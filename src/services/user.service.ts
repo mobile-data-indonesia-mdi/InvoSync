@@ -4,6 +4,7 @@ import { type UserRequest, type UserLogin, userPublicSchema } from '@models/user
 import jwt from 'jsonwebtoken';
 import env from '@config/env';
 import ms from 'ms';
+import { createLogService } from './log.service';
 
 export const registerService = async (userData: UserRequest) => {
   try {
@@ -27,6 +28,8 @@ export const registerService = async (userData: UserRequest) => {
       },
     });
 
+    await createLogService(newUser.user_id, 'REGISTER', 'success');
+    
     return newUser;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Internal server error';
@@ -67,6 +70,8 @@ export const loginService = async (userData: UserLogin) => {
         expiresIn: env.JWT_SECRET_REFRESH_LIFETIME as ms.StringValue,
       },
     );
+
+    await createLogService(user.user_id, 'LOGIN', 'success');
 
     return { accessToken, refreshToken };
   } catch (error) {
