@@ -70,7 +70,6 @@ export const loginService = async (userData: UserLogin) => {
 
     return { accessToken, refreshToken };
   } catch (error) {
-    console.error('Error login:', error);
     const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     throw new Error(errorMessage);
   }
@@ -111,7 +110,6 @@ export const getAllUserService = async () => {
     const users = await prisma.user.findMany();
     return users;
   } catch (error) {
-    console.error('Error fetching users:', error);
     const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     throw new Error(errorMessage);
   }
@@ -134,7 +132,6 @@ export const getUserByIdService = async (user_id: string) => {
 
     return parsedUser;
   } catch (error) {
-    console.error('Error fetching user:', error);
     const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     throw new Error(errorMessage);
   }
@@ -168,7 +165,6 @@ export const editUserByIdService = async (user_id: string, userData: UserRequest
 
     return updatedUser;
   } catch (error) {
-    console.error('Error updating user:', error);
     const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     throw new Error(errorMessage);
   }

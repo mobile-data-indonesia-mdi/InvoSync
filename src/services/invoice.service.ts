@@ -6,64 +6,20 @@ import {
 } from '@models/invoice.model';
 import type { Prisma } from '@prisma/client';
 
-export const getAllInvoiceService = async () => {
-  try {
-    const invoices = await prisma.invoice.findMany({
-      include: {
-        client: true,
-        invoice_details: true,
-      },
-    });
-
-    return invoices;
-  } catch (error) {
-    console.error('Error fetching invoices:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
-    throw new Error(errorMessage);
-  }
-};
-
-export const getInvoiceByIdService = async (invoice_id: string) => {
-  try {
-    const invoice = await prisma.invoice.findUnique({
-      where: {
-        invoice_id,
-      },
-      include: {
-        client: true,
-        invoice_details: true,
-      },
-    });
-
-    if (!invoice) {
-      throw new Error('Invoice tidak ditemukan');
-    }
-
-    return invoice;
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
-    throw new Error(errorMessage);
-  }
-};
-
 export const createInvoiceService = async (invoiceData: invoiceWithDetailsRequestSchema) => {
   try {
-    // Calculate amounts for each invoice detail
     const invoiceDetailsWithAmount = invoiceData.invoice_details.map(detail => ({
       ...detail,
       amount: detail.delivery_count * detail.price_per_delivery,
     }));
 
-    // Calculate subtotal, tax amount, and total
     const subTotal = invoiceDetailsWithAmount.reduce((acc, detail) => acc + detail.amount, 0);
     const taxAmount = subTotal * invoiceData.tax_rate;
     const total = subTotal + taxAmount;
 
-    // Default values for payment
     const amountPaid = 0;
     const paymentStatus = 'unpaid';
 
-    // Create invoice and associated details in a transaction
     const createdInvoice = await prisma.$transaction(async tx => {
       const invoice = await tx.invoice.create({
         data: {
@@ -94,9 +50,48 @@ export const createInvoiceService = async (invoiceData: invoiceWithDetailsReques
 
     return createdInvoice;
   } catch (error) {
-    console.error('Error creating invoice:', error);
     const errorMessage =
       error instanceof Error ? error.message : 'An error occurred while creating the invoice';
+    throw new Error(errorMessage);
+  }
+};
+
+export const getAllInvoiceService = async () => {
+  try {
+    const invoices = await prisma.invoice.findMany({
+      include: {
+        client: true,
+        invoice_details: true,
+      },
+    });
+    return invoices;
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
+    throw new Error(errorMessage);
+  }
+};
+
+export const getInvoiceByIdService = async (invoice_id: string) => {
+  try {
+    const invoice = await prisma.invoice.findUnique({
+      where: {
+        invoice_id,
+      },
+      include: {
+        client: true,
+        invoice_details: true,
+      },
+    });
+
+    if (!invoice) {
+      const notFoundError = new Error('Invoice tidak ditemukan');
+      notFoundError.name = 'NotFoundError';
+      throw notFoundError;
+    }
+
+    return invoice;
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     throw new Error(errorMessage);
   }
 };
@@ -107,14 +102,13 @@ export const updateInvoiceByIdService = async (
 ) => {
   try {
     const updatedInvoice = await prisma.$transaction(async tx => {
-      // Fetch existing details
       const existingDetails = await tx.invoiceDetail.findMany({
         where: { invoice_id },
       });
 
       const incomingDetails = invoiceData.invoice_details;
 
-      // Update or create incoming details
+      // Update or create details
       for (const detail of incomingDetails) {
         if (detail.invoice_detail_id) {
           await tx.invoiceDetail.update({
@@ -123,21 +117,21 @@ export const updateInvoiceByIdService = async (
               transaction_note: detail.transaction_note,
               delivery_count: detail.delivery_count,
               price_per_delivery: detail.price_per_delivery,
+              amount: detail.delivery_count * detail.price_per_delivery,
             },
           });
         } else {
-          const amount = detail.delivery_count * detail.price_per_delivery;
           await tx.invoiceDetail.create({
             data: {
               ...detail,
-              amount,
+              amount: detail.delivery_count * detail.price_per_delivery,
               invoice_id,
             },
           });
         }
       }
 
-      // Identify and delete removed details
+      // Delete removed details
       const incomingIds = incomingDetails
         .filter(d => d.invoice_detail_id)
         .map(d => d.invoice_detail_id);
@@ -147,7 +141,7 @@ export const updateInvoiceByIdService = async (
         await tx.invoiceDetail.delete({ where: { invoice_detail_id: detail.invoice_detail_id } });
       }
 
-      // Update the invoice itself
+      // Update main invoice
       const updatedInvoice = await tx.invoice.update({
         where: { invoice_id },
         data: {
@@ -166,7 +160,6 @@ export const updateInvoiceByIdService = async (
 
     return updatedInvoice;
   } catch (error) {
-    console.error('Error updating invoice:', error);
     const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
     throw new Error(errorMessage);
   }
@@ -175,23 +168,18 @@ export const updateInvoiceByIdService = async (
 export const deleteInvoiceByIdService = async (invoice_id: string) => {
   try {
     const invoice = await prisma.invoice.findUnique({
-      where: {
-        invoice_id,
-      },
+      where: { invoice_id },
     });
 
     if (!invoice) {
       throw new Error('Invoice tidak ditemukan');
     }
 
-    const deletedInvoice = await prisma.invoice.delete({
-      where: {
-        invoice_id,
-      },
+    await prisma.invoice.delete({
+      where: { invoice_id },
     });
 
-    return deletedInvoice;
-    // return deletedInvoice;
+    return;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
     throw new Error(errorMessage);

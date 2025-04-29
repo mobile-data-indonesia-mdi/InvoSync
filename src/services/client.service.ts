@@ -20,7 +20,6 @@ export const createClientService = async (clientData: ClientRequest) => {
 
     return client;
   } catch (error) {
-    console.error('Error creating client:', error);
     const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     throw new Error(errorMessage);
   }
@@ -62,8 +61,6 @@ export const editClientByIdService = async (client_id: string, clientData: Clien
 
     return updatedClient;
   } catch (error) {
-    // Logging error yang lebih terstruktur bisa dipertimbangkan
-    console.error('Error updating client:', error);
     const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     throw new Error(errorMessage);
   }
@@ -89,7 +86,6 @@ export const deleteClientByIdService = async (client_id: string) => {
 
     return { message: 'Client deleted successfully' };
   } catch (error) {
-    console.error('Error deleting client:', error);
     const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     throw new Error(errorMessage);
   }

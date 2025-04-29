@@ -7,7 +7,7 @@ import {
   getPaymentByIdService,
   editPaymentService,
   deletePaymentByIdService,
-  updatePaymentProofOfTransferService
+  updatePaymentProofOfTransferService,
   // restorePaymentService,
 } from '@services/payment.service';
 import { parseZodError } from '@utils/ResponseHelper';
@@ -21,7 +21,7 @@ export const createPaymentController = async (req: CustomRequest, res: Response)
     // Parse from multipart/form-data
     if (req.body.amount_paid && typeof req.body.amount_paid !== 'number') {
       req.body.amount_paid = parseFloat(req.body.amount_paid);
-    } 
+    }
 
     if (!req.body.proof_of_transfer && req.file) {
       req.body.proof_of_transfer = req.file.path;
@@ -99,7 +99,7 @@ export const editPaymentController = async (req: Request, res: Response) => {
     // Parse from multipart/form-data
     if (req.body.amount_paid && typeof req.body.amount_paid !== 'number') {
       req.body.amount_paid = parseFloat(req.body.amount_paid);
-    } 
+    }
 
     const validate = await paymentUpdateRequestSchema.safeParseAsync(req.body);
 
@@ -127,7 +127,7 @@ export const deletePaymentController = async (req: Request, res: Response) => {
     }
 
     const payment = await deletePaymentByIdService(payment_id);
-    res.status(201).json({ message: "Payment berhasil dihapus" });
+    res.status(201).json({ message: 'Payment berhasil dihapus' });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
     res.status(500).json({ error: errorMessage });

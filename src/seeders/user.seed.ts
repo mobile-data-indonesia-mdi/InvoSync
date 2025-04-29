@@ -3,7 +3,7 @@
 import { registerService } from '@services/user.service';
 import { type UserRequest } from '@models/user.model';
 
-const seedUsers = async () => { 
+const seedUsers = async () => {
   const users: UserRequest[] = [
     {
       username: 'cici',
@@ -27,7 +27,7 @@ const seedUsers = async () => {
       await registerService(user);
       console.log(`User ${user.username} berhasil didaftarkan`);
     } catch (error) {
-      console.error(`Gagal mendaftarkan user ${user.username}:`, error);
+      console.error(`Gagal mendaftar user ${user.username}:`, error);
     }
   }
 };
@@ -38,6 +38,5 @@ seedUsers()
     process.exit(0);
   })
   .catch(error => {
-    console.error('Terjadi kesalahan saat menjalankan seeder:', error);
     process.exit(1);
   });

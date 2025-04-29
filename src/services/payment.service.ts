@@ -68,7 +68,6 @@ export const getAllPaymentService = async () => {
 
     return payment;
   } catch (error) {
-    console.error('Error fetching invoices:', error);
     const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
     throw new Error(errorMessage);
   }
@@ -90,7 +89,6 @@ export const getPaymentByClientService = async (client_id: string) => {
 
     return payment;
   } catch (error) {
-    console.error('Error fetching invoices:', error);
     const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
     throw new Error(errorMessage);
   }
@@ -110,7 +108,6 @@ export const getPaymentByIdService = async (payment_id: string) => {
 
     return payment;
   } catch (error) {
-    console.error('Error fetching invoices:', error);
     const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
     throw new Error(errorMessage);
   }
@@ -222,7 +219,7 @@ export const deletePaymentByIdService = async (payment_id: string) => {
       if (fs.existsSync(filePath)) {
         fs.unlink(filePath, err => {
           if (err) {
-            console.error('Error deleting file:', err);
+            console.error(`Error deleting file: ${filePath}`, err);
           } else {
             console.log(`File deleted: ${filePath}`);
           }
