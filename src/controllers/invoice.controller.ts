@@ -129,3 +129,15 @@ export const deleteInvoiceByIdController = async (req: Request, res: Response): 
     return;
   }
 };
+
+export const getAllReceivableController = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const invoices = await getAllInvoiceService();
+    ResponseHelper(res, 'success', 200, 'Data successfully retrieved', invoices);
+    return;
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
+    ResponseHelper(res, 'error', 500, 'Internal server error', { error: errorMessage });
+    return;
+  }
+};

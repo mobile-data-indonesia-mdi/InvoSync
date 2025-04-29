@@ -1,5 +1,3 @@
-// src/seed.ts
-
 import { registerService } from '@services/user.service';
 import { type UserRequest } from '@models/user.model';
 
@@ -37,6 +35,6 @@ seedUsers()
     console.log('Seeder selesai');
     process.exit(0);
   })
-  .catch(error => {
+  .catch(() => {
     process.exit(1);
   });

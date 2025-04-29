@@ -5,7 +5,11 @@ export const paymentSchema = z.object({
   payment_date: z.string().transform(val => new Date(val)),
   amount_paid: z.number().min(0, { message: 'Amount paid must be a positive number' }),
   proof_of_transfer: z.string().min(1, { message: 'Proof of transfer is required' }),
-  voided_at: z.string().transform(val => new Date(val)).nullable().optional(),
+  voided_at: z
+    .string()
+    .transform(val => new Date(val))
+    .nullable()
+    .optional(),
   invoice_id: z.string().uuid(),
   createdAt: z.date(),
   updatedAt: z.date(),

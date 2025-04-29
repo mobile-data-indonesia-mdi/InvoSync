@@ -3,10 +3,14 @@ import { type Request } from 'express';
 import { type FileFilterCallback } from 'multer';
 import multer from 'multer';
 import fs from 'fs';
-import path from "path";
+import path from 'path';
 
 const storage_payment = multer.diskStorage({
-  destination: function (req: Request, file: Express.Multer.File, cb: (error: Error | null, filename: string) => void) {
+  destination: function (
+    req: Request,
+    file: Express.Multer.File,
+    cb: (error: Error | null, filename: string) => void,
+  ) {
     const uploadDir = path.join('uploads', 'payments');
 
     if (!fs.existsSync(uploadDir)) {
@@ -15,13 +19,17 @@ const storage_payment = multer.diskStorage({
 
     cb(null, uploadDir);
   },
-  filename: function (req: Request, file: Express.Multer.File, cb: (error: Error | null, filename: string) => void) {
+  filename: function (
+    req: Request,
+    file: Express.Multer.File,
+    cb: (error: Error | null, filename: string) => void,
+  ) {
     // uniqueSuffix untuk nama file sementara
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
     const extension = file.mimetype.split('/')[1]; // Ambil ekstensi file
     const filename = `temp-${uniqueSuffix}.${extension}`;
     cb(null, filename);
-  }
+  },
 });
 
 const fileFilter = (req: Express.Request, file: Express.Multer.File, cb: FileFilterCallback) => {
@@ -34,10 +42,10 @@ const fileFilter = (req: Express.Request, file: Express.Multer.File, cb: FileFil
   }
 };
 
-export const upload_payment = multer({ 
+export const upload_payment = multer({
   storage: storage_payment,
   fileFilter: fileFilter,
   limits: {
     fileSize: 5 * 1024 * 1024, // Max 5 MB
-  }
+  },
 });

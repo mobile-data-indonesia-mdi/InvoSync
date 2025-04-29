@@ -262,3 +262,24 @@ export const updateInvoicePaymentStatusService = async (
     data: { payment_status: paymentStatus },
   });
 };
+
+export const getAllReceivableService = async () => {
+  try {
+    const receivables = await prisma.invoice.findMany({
+      where: {
+        payment_status: {
+          in: ['unpaid', 'partial'],
+        },
+      },
+      include: {
+        client: true,
+        invoice_details: true,
+      },
+    });
+
+    return receivables;
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
+    throw new Error(errorMessage);
+  }
+};
