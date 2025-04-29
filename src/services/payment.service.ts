@@ -237,6 +237,18 @@ export const deletePaymentByIdService = async (payment_id: string) => {
   }
 };
 
+export const getProofPaymentService = async (payment_filename: string) => {
+  try {
+    const proofOfTransferPath = path.resolve('uploads/payments', payment_filename);
+    
+    return proofOfTransferPath;
+  }
+ catch (error) {
+  const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
+    throw new Error(errorMessage);
+  }
+};
+
 export const restorePaymentService = async (payment_id: string) => {
   try {
     const payment = await prisma.payment.findUnique({
