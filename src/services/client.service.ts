@@ -49,7 +49,7 @@ export const editClientByIdService = async (client_id: string, clientData: Clien
     });
 
     if (!client) {
-      throw new Error('Data not found');
+      // throw new AppError('Data not found', 404);
     }
 
     const updatedClient = await prisma.client.update({

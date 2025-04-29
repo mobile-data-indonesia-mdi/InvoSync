@@ -14,7 +14,7 @@ export const registerService = async (userData: UserRequest) => {
     });
 
     if (existingUser) {
-      throw new Error('Data already exists');
+      // throw new HttpError(409, 'Data already exists');
     }
 
     const hashedPassword = await bcrypt.hash(userData.password, 10);
@@ -29,8 +29,16 @@ export const registerService = async (userData: UserRequest) => {
 
     return newUser;
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
-    throw new Error(errorMessage);
+    // if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    //   if (error.code === 'P2002') {
+    //     throw new HttpError(409, 'Data already exists');
+    //   }
+    // }
+    // if (error instanceof HttpError) {
+    //   throw error;
+    // }
+    // throw new HttpError(500, 'Internal server error');
+    console.log(error);
   }
 };
 
@@ -171,6 +179,34 @@ export const editUserByIdService = async (user_id: string, userData: UserRequest
     const parsedUser = userPublicSchema.parse(updatedUser);
 
     return parsedUser;
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
+    throw new Error(errorMessage);
+  }
+};
+
+export const softDeleteUserByIdService = async (user_id: string) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: {
+        user_id,
+      },
+    });
+
+    if (!user) {
+      throw new Error('User tidak ditemukan');
+    }
+
+    await prisma.user.update({
+      where: {
+        user_id,
+      },
+      data: {
+        deleted_at: new Date(),
+      },
+    });
+
+    return { message: 'User berhasil di-soft delete' };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     throw new Error(errorMessage);

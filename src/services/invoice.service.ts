@@ -8,6 +8,26 @@ import type { Prisma } from '@prisma/client';
 
 export const createInvoiceService = async (invoiceData: invoiceWithDetailsRequestSchema) => {
   try {
+    const isInvoiceNumberExists = await prisma.invoice.findUnique({
+      where: {
+        invoice_number: invoiceData.invoice_number,
+      },
+    });
+
+    if (isInvoiceNumberExists) {
+      throw new Error('Nomor invoice sudah ada');
+    }
+
+    const isClientExists = await prisma.client.findUnique({
+      where: {
+        client_id: invoiceData.client_id,
+      },
+    });
+
+    if (!isClientExists) {
+      throw new Error('Client tidak ditemukan');
+    }
+
     const invoiceDetailsWithAmount = invoiceData.invoice_details.map(detail => ({
       ...detail,
       amount: detail.delivery_count * detail.price_per_delivery,
