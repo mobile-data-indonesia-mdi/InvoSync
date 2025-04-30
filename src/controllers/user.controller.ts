@@ -1,4 +1,8 @@
 import type { Request, Response } from 'express';
+import ms from 'ms';
+
+import env from '@config/env';
+import { userRequestSchema, userLoginSchema } from '@models/user.model';
 import {
   registerService,
   loginService,
@@ -7,14 +11,10 @@ import {
   getUserByIdService,
   editUserByIdService,
 } from '@services/user.service';
-import { userRequestSchema, userLoginSchema } from '@models/user.model';
-
+import log from '@utils/logs';
 import responseHelper from '@utils/responseHelper';
 import parseZodError from '@utils/parseZodError';
-import env from '@config/env';
-import ms from 'ms';
 import HttpError from '@utils/httpError';
-import log from '@utils/logs';
 
 export const registerController = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -22,7 +22,6 @@ export const registerController = async (req: Request, res: Response): Promise<v
 
     if (!validate.success) {
       log(req, 'ERROR', 'Invalid parameters');
-
       const parsedError = parseZodError(validate.error);
       responseHelper(res, 'error', 400, 'Invalid parameters', parsedError);
       return;
@@ -31,17 +30,12 @@ export const registerController = async (req: Request, res: Response): Promise<v
     await registerService(validate.data);
     log(req, 'SUCCESS', 'Data successfully created');
     responseHelper(res, 'success', 201, 'Data successfully created', null);
-    return;
   } catch (error) {
-    if (error instanceof HttpError) {
-      log(req, 'ERROR', error.message);
-      responseHelper(res, 'error', error.statusCode, error.message, null);
-    } else {
-      log(req, 'ERROR', 'Internal server error');
-      responseHelper(res, 'error', 500, 'Internal server error', null);
-    }
+    const errorMessage = error instanceof HttpError ? error.message : 'Internal server error';
+    const statusCode = error instanceof HttpError ? error.statusCode : 500;
 
-    return;
+    log(req, 'ERROR', errorMessage);
+    responseHelper(res, 'error', statusCode, errorMessage, null);
   }
 };
 
@@ -50,6 +44,7 @@ export const loginController = async (req: Request, res: Response): Promise<void
     const validate = await userLoginSchema.safeParseAsync(req.body);
 
     if (!validate.success) {
+      log(req, 'ERROR', 'Invalid parameters');
       const parsed = parseZodError(validate.error);
       responseHelper(res, 'error', 400, 'Invalid parameters', parsed);
       return;
@@ -59,7 +54,6 @@ export const loginController = async (req: Request, res: Response): Promise<void
 
     res.cookie('accessToken', accessToken, {
       httpOnly: true,
-      // secure: env.NODE_ENV === 'production',
       secure: true,
       maxAge: ms(env.JWT_SECRET_ACCESS_LIFETIME as ms.StringValue),
       sameSite: 'none',
@@ -67,52 +61,45 @@ export const loginController = async (req: Request, res: Response): Promise<void
 
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
-      // secure: env.NODE_ENV === 'production',
       secure: true,
       maxAge: ms(env.JWT_SECRET_REFRESH_LIFETIME as ms.StringValue),
       sameSite: 'none',
     });
 
-    responseHelper(res, 'success', 200, 'Successfully Login', null);
-    return;
+    log(req, 'SUCCESS', 'Successfully logged in');
+    responseHelper(res, 'success', 200, 'Successfully logged in', null);
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
-    responseHelper(res, 'error', 500, 'Internal server error', { error: errorMessage });
-    return;
+    const errorMessage = error instanceof HttpError ? error.message : 'Internal server error';
+    const statusCode = error instanceof HttpError ? error.statusCode : 500;
+
+    log(req, 'ERROR', errorMessage);
+    responseHelper(res, 'error', statusCode, errorMessage, null);
   }
 };
 
-export const logoutController = async (_req: Request, res: Response): Promise<void> => {
-  try {
-    res.clearCookie('accessToken', {
-      httpOnly: true,
-      // secure: env.NODE_ENV === 'production',
-      secure: true,
-      sameSite: 'none',
-    });
+export const logoutController = (req: Request, res: Response): void => {
+  log(req, 'SUCCESS', 'Successfully logged out');
+  res.clearCookie('accessToken', {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'none',
+  });
 
-    res.clearCookie('refreshToken', {
-      httpOnly: true,
-      // secure: env.NODE_ENV === 'production',
-      secure: true,
-      sameSite: 'none',
-    });
+  res.clearCookie('refreshToken', {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'none',
+  });
 
-    responseHelper(res, 'success', 204, 'Successfully logged out', null);
-    return;
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
-    responseHelper(res, 'error', 500, 'Internal server error', { error: errorMessage });
-    return;
-  }
+  responseHelper(res, 'success', 204, 'Successfully logged out', null);
 };
 
 export const refreshTokenController = async (req: Request, res: Response): Promise<void> => {
   try {
-    console.log('Masuk ke refresh token controller');
     const refreshToken = req.cookies['refreshToken'];
 
     if (!refreshToken) {
+      log(req, 'ERROR', 'Access denied. No refresh token provided');
       responseHelper(res, 'error', 401, 'Access denied. Please log in first', null);
       return;
     }
@@ -121,51 +108,45 @@ export const refreshTokenController = async (req: Request, res: Response): Promi
 
     res.cookie('accessToken', newAccessToken, {
       httpOnly: true,
-      // secure: process.env.NODE_ENV === 'production',
       secure: true,
       maxAge: ms(env.JWT_SECRET_ACCESS_LIFETIME as ms.StringValue),
       sameSite: 'strict',
     });
 
-    responseHelper(res, 'success', 200, 'Data Successfully updated', null);
-    return;
+    log(req, 'SUCCESS', 'Access token successfully refreshed');
+    responseHelper(res, 'success', 200, 'Access token successfully refreshed', null);
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
-    responseHelper(res, 'error', 500, 'Internal server error', { error: errorMessage });
-    return;
+    const errorMessage = error instanceof HttpError ? error.message : 'Internal server error';
+    const statusCode = error instanceof HttpError ? error.statusCode : 500;
+
+    log(req, 'ERROR', errorMessage);
+    responseHelper(res, 'error', statusCode, errorMessage, null);
   }
 };
 
 export const profileController = async (req: Request, res: Response): Promise<void> => {
-  if (!req.user) {
-    responseHelper(res, 'error', 401, 'Internal server error', null);
-    return;
-  }
-
-  const user = req.user;
-
-  res.status(200).json({
-    message: 'Autentikasi berhasil',
-    data: user,
-  });
-  return;
+  log(req, 'SUCCESS', 'Profile retrieved successfully');
+  responseHelper(res, 'success', 200, ' Authentication successful', req.user);
 };
 
-export const getAllUserController = async (_req: Request, res: Response): Promise<void> => {
+export const getAllUserController = async (req: Request, res: Response): Promise<void> => {
   try {
     const users = await getAllUserService();
 
     if (users.length === 0) {
+      log(req, 'ERROR', 'No users found');
       responseHelper(res, 'success', 404, 'Data not found', null);
       return;
     }
 
+    log(req, 'SUCCESS', 'Users retrieved successfully');
     responseHelper(res, 'success', 200, 'Data successfully retrieved', users);
-    return;
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
-    responseHelper(res, 'error', 500, 'Internal server error', { error: errorMessage });
-    return;
+    const errorMessage = error instanceof HttpError ? error.message : 'Internal server error';
+    const statusCode = error instanceof HttpError ? error.statusCode : 500;
+
+    log(req, 'ERROR', errorMessage);
+    responseHelper(res, 'error', statusCode, errorMessage, null);
   }
 };
 
@@ -174,6 +155,7 @@ export const getUserByIdController = async (req: Request, res: Response): Promis
     const userId = req.params.id;
 
     if (!userId) {
+      log(req, 'ERROR', 'Invalid user ID');
       responseHelper(res, 'error', 400, 'Invalid parameters', null);
       return;
     }
@@ -181,15 +163,19 @@ export const getUserByIdController = async (req: Request, res: Response): Promis
     const user = await getUserByIdService(userId);
 
     if (!user) {
+      log(req, 'ERROR', 'User not found');
       responseHelper(res, 'error', 404, 'Data not found', null);
       return;
     }
+
+    log(req, 'SUCCESS', 'User retrieved successfully');
     responseHelper(res, 'success', 200, 'Data successfully retrieved', user);
-    return;
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
-    responseHelper(res, 'error', 500, 'Internal server error', { error: errorMessage });
-    return;
+    const errorMessage = error instanceof HttpError ? error.message : 'Internal server error';
+    const statusCode = error instanceof HttpError ? error.statusCode : 500;
+
+    log(req, 'ERROR', errorMessage);
+    responseHelper(res, 'error', statusCode, errorMessage, null);
   }
 };
 
@@ -198,6 +184,7 @@ export const editUserByIdController = async (req: Request, res: Response): Promi
     const userId = req.params.id;
 
     if (!userId) {
+      log(req, 'ERROR', 'Invalid user ID');
       responseHelper(res, 'error', 400, 'Invalid parameters', null);
       return;
     }
@@ -205,48 +192,27 @@ export const editUserByIdController = async (req: Request, res: Response): Promi
     const validate = await userRequestSchema.safeParseAsync(req.body);
 
     if (!validate.success) {
-      const parsed = parseZodError(validate.error);
-      responseHelper(res, 'error', 400, 'Invalid parameters', parsed);
+      log(req, 'ERROR', 'Invalid parameters');
+      const parsedError = parseZodError(validate.error);
+      responseHelper(res, 'error', 400, 'Invalid parameters', parsedError);
       return;
     }
 
     const updatedUser = await editUserByIdService(userId, validate.data);
 
     if (!updatedUser) {
+      log(req, 'ERROR', 'No content to display');
       responseHelper(res, 'success', 404, 'No content to display', null);
       return;
     }
 
-    responseHelper(res, 'success', 200, 'Data Successfully updated', updatedUser);
-    return;
+    log(req, 'SUCCESS', 'User updated successfully');
+    responseHelper(res, 'success', 200, 'Data successfully updated', updatedUser);
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
-    responseHelper(res, 'error', 500, 'Internal server error', { error: errorMessage });
-    return;
+    const errorMessage = error instanceof HttpError ? error.message : 'Internal server error';
+    const statusCode = error instanceof HttpError ? error.statusCode : 500;
+
+    log(req, 'ERROR', errorMessage);
+    responseHelper(res, 'error', statusCode, errorMessage, null);
   }
 };
-
-// export const deleteUserByIdController = async (req: Request, res: Response): Promise<void> => {
-//   try {
-//     const userId = req.params.id;
-
-//     if (!userId) {
-//       responseHelper(res, 'error', 400, 'Invalid parameters', null);
-//       return;
-//     }
-
-//     const deletedUser = await deleteUserByIdService(userId);
-
-//     if (!deletedUser) {
-//       responseHelper(res, 'success', 404, 'No content to display', null);
-//       return;
-//     }
-
-//     responseHelper(res, 'success', 204, 'Data successfully deleted', deletedUser);
-//     return;
-//   } catch (error) {
-//     const errorMessage = error instanceof Error ? error.message : 'Internal server error';
-//     responseHelper(res, 'error', 500, 'Internal server error', { error: errorMessage });
-//     return;
-//   }
-// };
