@@ -23,4 +23,4 @@ export const logRequestSchema = logSchema.pick({
   status_message: true,
 });
 
-export type LogRequestSchema = z.infer<typeof logRequestSchema>;
+export type LogRequest = z.infer<typeof logRequestSchema>;

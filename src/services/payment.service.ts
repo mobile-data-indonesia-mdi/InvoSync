@@ -4,6 +4,7 @@ import type { Prisma } from '@prisma/client';
 import { getPaymentStatusService, updateInvoiceAmountPaidService } from '@services/invoice.service';
 import fs from 'fs';
 import path from 'path';
+import HttpError from '@utils/httpError';
 
 export const createPaymentService = async (
   paymentData: PaymentRequestSchema,
@@ -12,7 +13,10 @@ export const createPaymentService = async (
   try {
     const invoiceData = await getPaymentStatusService(paymentData.invoice_id);
     if (invoiceData.payment_status === 'paid') {
-      throw new Error(`Client sudah membayar semua tagihan pada invoice ${paymentData.invoice_id}`);
+      throw new HttpError(
+        'Client sudah membayar semua tagihan pada invoice ${paymentData.invoice_id}',
+        409,
+      );
     }
 
     const createdPayment = await prisma.$transaction(async tx => {
@@ -53,7 +57,7 @@ export const createPaymentService = async (
 
     return await getPaymentByIdService(createdPayment.payment_id);
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     throw new Error(errorMessage);
   }
 };
@@ -68,8 +72,7 @@ export const getAllPaymentService = async () => {
 
     return payment;
   } catch (error) {
-    console.error('Error fetching invoices:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     throw new Error(errorMessage);
   }
 };
@@ -90,8 +93,7 @@ export const getPaymentByClientService = async (client_id: string) => {
 
     return payment;
   } catch (error) {
-    console.error('Error fetching invoices:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     throw new Error(errorMessage);
   }
 };
@@ -110,8 +112,7 @@ export const getPaymentByIdService = async (payment_id: string) => {
 
     return payment;
   } catch (error) {
-    console.error('Error fetching invoices:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     throw new Error(errorMessage);
   }
 };
@@ -194,7 +195,7 @@ export const editPaymentService = async (
 
     return updatedPayment;
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     throw new Error(errorMessage);
   }
 };

@@ -129,6 +129,10 @@ export const getAllUserService = async () => {
       },
     });
 
+    if (!users) {
+      throw new HttpError('User tidak ditemukan', 404);
+    }
+
     const parsedUsers = users.map(user => userPublicSchema.parse(user));
 
     return parsedUsers;

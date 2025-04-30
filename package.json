@@ -24,7 +24,7 @@
     "lint": "eslint . --ext .ts",
     "prettier": "prettier --write .",
     "start": "bun run build && bun dist/index.js",
-    "jest": "bunx jest",
+    "test": "bunx jest",
     "migrate": "bunx prisma migrate dev",
     "migrate:reset": "bunx prisma migrate reset --force"
   },

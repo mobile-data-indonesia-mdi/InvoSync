@@ -28,8 +28,8 @@ app.use('/payments', paymentRoute);
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-app.use((req, res) => {
-  log(req, 'ERROR', 'Route not found');
+app.use(async (req, res) => {
+  await log(req, 'ERROR', 'Route not found');
   responseHelper(res, 'error', 404, 'Route not found', null);
   return;
 });

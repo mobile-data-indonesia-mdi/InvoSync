@@ -5,7 +5,7 @@ import {
   getAllInvoiceController,
   getInvoiceByIdController,
   updateInvoiceByIdController,
-  deleteInvoiceByIdController,
+  // deleteInvoiceByIdController,
 } from '@controllers/invoice.controller';
 
 import { authGuard } from '@middlewares/jwt.middleware';
@@ -23,6 +23,6 @@ router.get(
 );
 router.post('/', authGuard, roleGuard(['finance']), createInvoiceController);
 router.put('/:id', authGuard, roleGuard(['finance']), updateInvoiceByIdController);
-router.delete('/:id', authGuard, roleGuard(['finance']), deleteInvoiceByIdController);
+// router.delete('/:id', authGuard, roleGuard(['finance']), deleteInvoiceByIdController);
 
 export default router;

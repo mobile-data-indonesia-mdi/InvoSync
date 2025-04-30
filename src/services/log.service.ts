@@ -1,9 +1,9 @@
 import { prisma } from '@config/db';
 import jwt from 'jsonwebtoken';
-import type { LogRequestSchema } from '@models/log.model';
+import type { LogRequest } from '@models/log.model';
 import { logRequestSchema } from '@models/log.model';
 
-export const createLogService = async (logData: LogRequestSchema) => {
+export const createLogService = async (logData: LogRequest) => {
   const validate = await logRequestSchema.safeParseAsync(logData);
 
   if (!validate.success) {

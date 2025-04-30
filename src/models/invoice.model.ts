@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { invoiceDetailRequestSchema, invoiceDetailUpdateSchema } from './invoiceDetail.model';
+import { invoiceDetailCreateSchema, invoiceDetailUpdateSchema } from './invoiceDetail.model';
 
 export const invoiceSchema = z.object({
   invoice_id: z.string().uuid(),
@@ -31,8 +31,8 @@ export const invoiceRequestSchema = invoiceSchema.pick({
   client_id: true,
 });
 
-export const invoiceWithDetailsRequestSchema = invoiceRequestSchema.extend({
-  invoice_details: z.array(invoiceDetailRequestSchema).min(1, {
+export const invoiceWithDetailsCreateSchema = invoiceRequestSchema.extend({
+  invoice_details: z.array(invoiceDetailCreateSchema).min(1, {
     message: 'Invoice details are required',
   }),
 });
@@ -49,9 +49,7 @@ export const invoiceUpdateFromPaymentRequestSchema = invoiceSchema.pick({
 });
 
 export type InvoiceRequest = z.infer<typeof invoiceRequestSchema>;
-export type invoiceWithDetailsRequestSchema = z.infer<typeof invoiceWithDetailsRequestSchema>;
-export type InvoiceUpdateFromPaymentRequestSchema = z.infer<
-  typeof invoiceUpdateFromPaymentRequestSchema
->;
+export type InvoiceWithDetailsRequest = z.infer<typeof invoiceWithDetailsCreateSchema>;
+export type InvoiceUpdateFromPaymentRequest = z.infer<typeof invoiceUpdateFromPaymentRequestSchema>;
 
 export type InvoiceWithDetailsUpdate = z.infer<typeof invoiceWithDetailsUpdateSchema>;

@@ -17,7 +17,7 @@ export const createClientController = async (req: Request, res: Response): Promi
   const validate = await clientRequestSchema.safeParseAsync(req.body);
 
   if (!validate.success) {
-    log(req, 'ERROR', 'Invalid parameters');
+    await log(req, 'ERROR', 'Invalid parameters');
     const parsed = parseZodError(validate.error);
     responseHelper(res, 'error', 400, 'Invalid parameters', parsed);
     return;
@@ -25,13 +25,13 @@ export const createClientController = async (req: Request, res: Response): Promi
 
   try {
     const newClient = await createClientService(validate.data);
-    log(req, 'SUCCESS', 'Data successfully created');
+    await log(req, 'SUCCESS', 'Data successfully created');
     responseHelper(res, 'success', 201, 'Data successfully created', newClient);
   } catch (error) {
     const errorMessage = error instanceof HttpError ? error.message : 'Internal server error';
     const statusCode = error instanceof HttpError ? error.statusCode : 500;
 
-    log(req, 'ERROR', errorMessage);
+    await log(req, 'ERROR', errorMessage);
     responseHelper(res, 'error', statusCode, errorMessage, null);
     return;
   }
@@ -42,12 +42,12 @@ export const getAllClientController = async (req: Request, res: Response): Promi
     const clients = await getAllClientService();
 
     if (!clients || clients.length === 0) {
-      log(req, 'SUCCESS', 'No content to display');
+      await log(req, 'SUCCESS', 'No content to display');
       responseHelper(res, 'success', 404, 'No content to display', null);
       return;
     }
 
-    log(req, 'SUCCESS', 'Data successfully retrieved');
+    await log(req, 'SUCCESS', 'Data successfully retrieved');
     responseHelper(res, 'success', 200, 'Data successfully retrieved', clients);
   } catch (error) {
     const errorMessage = error instanceof HttpError ? error.message : 'Internal server error';
@@ -63,7 +63,7 @@ export const getClientByIdController = async (req: Request, res: Response): Prom
   const clientId = req.params.id;
 
   if (!clientId) {
-    log(req, 'ERROR', 'Invalid parameters');
+    await log(req, 'ERROR', 'Invalid parameters');
     responseHelper(res, 'error', 400, 'Invalid parameters', null);
     return;
   }
@@ -72,18 +72,18 @@ export const getClientByIdController = async (req: Request, res: Response): Prom
     const client = await getClientByIdService(clientId);
 
     if (!client) {
-      log(req, 'SUCCESS', 'No content to display');
+      await log(req, 'SUCCESS', 'No content to display');
       responseHelper(res, 'success', 404, 'No content to display', null);
       return;
     }
 
-    log(req, 'SUCCESS', 'Data successfully retrieved');
+    await log(req, 'SUCCESS', 'Data successfully retrieved');
     responseHelper(res, 'success', 200, 'Data successfully retrieved', client);
   } catch (error) {
     const errorMessage = error instanceof HttpError ? error.message : 'Internal server error';
     const statusCode = error instanceof HttpError ? error.statusCode : 500;
 
-    log(req, 'ERROR', errorMessage);
+    await log(req, 'ERROR', errorMessage);
     responseHelper(res, 'error', statusCode, errorMessage, null);
     return;
   }
@@ -93,7 +93,7 @@ export const editClientByIdController = async (req: Request, res: Response): Pro
   const clientId = req.params.id;
 
   if (!clientId) {
-    log(req, 'ERROR', 'Invalid parameters');
+    await log(req, 'ERROR', 'Invalid parameters');
     responseHelper(res, 'error', 400, 'Invalid parameters', null);
     return;
   }
@@ -101,7 +101,7 @@ export const editClientByIdController = async (req: Request, res: Response): Pro
   const validate = await clientRequestSchema.safeParseAsync(req.body);
 
   if (!validate.success) {
-    log(req, 'ERROR', 'Invalid parameters');
+    await log(req, 'ERROR', 'Invalid parameters');
     const parsed = parseZodError(validate.error);
     responseHelper(res, 'error', 400, 'Invalid parameters', parsed);
     return;
@@ -109,13 +109,13 @@ export const editClientByIdController = async (req: Request, res: Response): Pro
 
   try {
     const updatedClient = await editClientByIdService(clientId, validate.data);
-    log(req, 'SUCCESS', 'Data successfully updated');
+    await log(req, 'SUCCESS', 'Data successfully updated');
     responseHelper(res, 'success', 200, 'Data successfully updated', updatedClient);
   } catch (error) {
     const errorMessage = error instanceof HttpError ? error.message : 'Internal server error';
     const statusCode = error instanceof HttpError ? error.statusCode : 500;
 
-    log(req, 'ERROR', errorMessage);
+    await log(req, 'ERROR', errorMessage);
     responseHelper(res, 'error', statusCode, errorMessage, null);
     return;
   }

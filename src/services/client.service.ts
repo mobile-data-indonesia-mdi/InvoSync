@@ -1,5 +1,6 @@
 import { prisma } from '@config/db';
 import { type ClientRequest } from '@models/client.model';
+import HttpError from '@utils/httpError';
 
 export const getAllClientService = async () => {
   try {
@@ -7,21 +8,37 @@ export const getAllClientService = async () => {
 
     return clients;
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
-    throw new Error(errorMessage);
+    if (error instanceof HttpError) {
+      throw error;
+    }
+
+    throw new HttpError('Internal Server Error', 500);
   }
 };
 
 export const createClientService = async (clientData: ClientRequest) => {
   try {
+    const existingClient = await prisma.client.findUnique({
+      where: {
+        client_name: clientData.client_name,
+      },
+    });
+
+    if (existingClient) {
+      throw new HttpError('Client already exists', 409);
+    }
+
     const client = await prisma.client.create({
       data: clientData,
     });
 
     return client;
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
-    throw new Error(errorMessage);
+    if (error instanceof HttpError) {
+      throw error;
+    }
+
+    throw new HttpError('Internal Server Error', 500);
   }
 };
 
@@ -33,10 +50,17 @@ export const getClientByIdService = async (client_id: string) => {
       },
     });
 
+    if (!client) {
+      throw new HttpError('Client not found', 404);
+    }
+
     return client;
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
-    throw new Error(errorMessage);
+    if (error instanceof HttpError) {
+      throw error;
+    }
+
+    throw new HttpError('Internal Server Error', 500);
   }
 };
 
@@ -49,7 +73,7 @@ export const editClientByIdService = async (client_id: string, clientData: Clien
     });
 
     if (!client) {
-      // throw new AppError('Data not found', 404);
+      throw new HttpError('Client not found', 404);
     }
 
     const updatedClient = await prisma.client.update({
@@ -61,8 +85,11 @@ export const editClientByIdService = async (client_id: string, clientData: Clien
 
     return updatedClient;
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
-    throw new Error(errorMessage);
+    if (error instanceof HttpError) {
+      throw error;
+    }
+
+    throw new HttpError('Internal Server Error', 500);
   }
 };
 

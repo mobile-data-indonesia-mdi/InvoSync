@@ -1,12 +1,13 @@
 import { prisma } from '@config/db';
 
 import {
-  invoiceWithDetailsRequestSchema,
+  type InvoiceWithDetailsRequest,
   type InvoiceWithDetailsUpdate,
 } from '@models/invoice.model';
 import type { Prisma } from '@prisma/client';
+import HttpError from '@utils/httpError';
 
-export const createInvoiceService = async (invoiceData: invoiceWithDetailsRequestSchema) => {
+export const createInvoiceService = async (invoiceData: InvoiceWithDetailsRequest) => {
   try {
     const isInvoiceNumberExists = await prisma.invoice.findUnique({
       where: {
@@ -15,7 +16,7 @@ export const createInvoiceService = async (invoiceData: invoiceWithDetailsReques
     });
 
     if (isInvoiceNumberExists) {
-      throw new Error('Nomor invoice sudah ada');
+      throw new HttpError('Duplicate invoice', 409);
     }
 
     const isClientExists = await prisma.client.findUnique({
@@ -25,7 +26,7 @@ export const createInvoiceService = async (invoiceData: invoiceWithDetailsReques
     });
 
     if (!isClientExists) {
-      throw new Error('Client tidak ditemukan');
+      throw new HttpError('Client not found', 404);
     }
 
     const invoiceDetailsWithAmount = invoiceData.invoice_details.map(detail => ({
@@ -70,9 +71,11 @@ export const createInvoiceService = async (invoiceData: invoiceWithDetailsReques
 
     return createdInvoice;
   } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : 'An error occurred while creating the invoice';
-    throw new Error(errorMessage);
+    if (error instanceof HttpError) {
+      throw error;
+    }
+
+    throw new HttpError('Internal Server Error', 500);
   }
 };
 
@@ -86,8 +89,11 @@ export const getAllInvoiceService = async () => {
     });
     return invoices;
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
-    throw new Error(errorMessage);
+    if (error instanceof HttpError) {
+      throw error;
+    }
+
+    throw new HttpError('Internal Server Error', 500);
   }
 };
 
@@ -104,15 +110,16 @@ export const getInvoiceByIdService = async (invoice_id: string) => {
     });
 
     if (!invoice) {
-      const notFoundError = new Error('Invoice tidak ditemukan');
-      notFoundError.name = 'NotFoundError';
-      throw notFoundError;
+      throw new HttpError('Invoice not found', 404);
     }
 
     return invoice;
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
-    throw new Error(errorMessage);
+    if (error instanceof HttpError) {
+      throw error;
+    }
+
+    throw new HttpError('Internal Server Error', 500);
   }
 };
 
@@ -121,6 +128,26 @@ export const updateInvoiceByIdService = async (
   invoiceData: InvoiceWithDetailsUpdate,
 ) => {
   try {
+    const isInvoiceExist = await prisma.invoice.findUnique({
+      where: {
+        invoice_id,
+      },
+    });
+
+    if (!isInvoiceExist) {
+      throw new HttpError('Invoice not found', 404);
+    }
+
+    const isClientExists = await prisma.client.findUnique({
+      where: {
+        client_id: invoiceData.client_id,
+      },
+    });
+
+    if (!isClientExists) {
+      throw new HttpError('Client not found', 404);
+    }
+
     const updatedInvoice = await prisma.$transaction(async tx => {
       const existingDetails = await tx.invoiceDetail.findMany({
         where: { invoice_id },
@@ -180,31 +207,37 @@ export const updateInvoiceByIdService = async (
 
     return updatedInvoice;
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
-    throw new Error(errorMessage);
-  }
-};
-
-export const deleteInvoiceByIdService = async (invoice_id: string) => {
-  try {
-    const invoice = await prisma.invoice.findUnique({
-      where: { invoice_id },
-    });
-
-    if (!invoice) {
-      throw new Error('Invoice tidak ditemukan');
+    if (error instanceof HttpError) {
+      throw error;
     }
-
-    await prisma.invoice.delete({
-      where: { invoice_id },
-    });
-
-    return;
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
-    throw new Error(errorMessage);
+    console.log(error);
+    throw new HttpError('Internal Server Error', 500);
   }
 };
+
+// export const deleteInvoiceByIdService = async (invoice_id: string) => {
+//   try {
+//     const invoice = await prisma.invoice.findUnique({
+//       where: { invoice_id },
+//     });
+
+//     if (!invoice) {
+//       throw new Error('Invoice tidak ditemukan');
+//     }
+
+//     await prisma.invoice.delete({
+//       where: { invoice_id },
+//     });
+
+//     return;
+//   } catch (error) {
+//     if (error instanceof HttpError) {
+//       throw error;
+//     }
+
+//     throw new HttpError('Internal Server Error', 500);
+//   }
+// };
 
 // Payments Services -> Invoice Services
 export const getPaymentStatusService = async (invoice_id: string) => {
@@ -224,8 +257,11 @@ export const getPaymentStatusService = async (invoice_id: string) => {
 
     return invoice;
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
-    throw new Error(errorMessage);
+    if (error instanceof HttpError) {
+      throw error;
+    }
+
+    throw new HttpError('Internal Server Error', 500);
   }
 };
 
@@ -299,7 +335,10 @@ export const getAllReceivableService = async () => {
 
     return receivables;
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
-    throw new Error(errorMessage);
+    if (error instanceof HttpError) {
+      throw error;
+    }
+
+    throw new HttpError('Internal Server Error', 500);
   }
 };

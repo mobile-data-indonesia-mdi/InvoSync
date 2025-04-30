@@ -21,20 +21,20 @@ export const registerController = async (req: Request, res: Response): Promise<v
     const validate = await userRegisterSchema.safeParseAsync(req.body);
 
     if (!validate.success) {
-      log(req, 'ERROR', 'Invalid parameters');
+      await log(req, 'ERROR', 'Invalid parameters');
       const parsedError = parseZodError(validate.error);
       responseHelper(res, 'error', 400, 'Invalid parameters', parsedError);
       return;
     }
 
     await registerService(validate.data);
-    log(req, 'SUCCESS', 'Data successfully created');
+    await log(req, 'SUCCESS', 'Data successfully created');
     responseHelper(res, 'success', 201, 'Data successfully created', null);
   } catch (error) {
     const errorMessage = error instanceof HttpError ? error.message : 'Internal server error';
     const statusCode = error instanceof HttpError ? error.statusCode : 500;
 
-    log(req, 'ERROR', errorMessage);
+    await log(req, 'ERROR', errorMessage);
     responseHelper(res, 'error', statusCode, errorMessage, null);
     return;
   }
@@ -45,7 +45,7 @@ export const loginController = async (req: Request, res: Response): Promise<void
     const validate = await userLoginSchema.safeParseAsync(req.body);
 
     if (!validate.success) {
-      log(req, 'ERROR', 'Invalid parameters');
+      await log(req, 'ERROR', 'Invalid parameters');
       const parsed = parseZodError(validate.error);
       responseHelper(res, 'error', 400, 'Invalid parameters', parsed);
       return;
@@ -67,20 +67,20 @@ export const loginController = async (req: Request, res: Response): Promise<void
       sameSite: 'none',
     });
 
-    log(req, 'SUCCESS', 'Successfully logged in');
+    await log(req, 'SUCCESS', 'Successfully logged in');
     responseHelper(res, 'success', 200, 'Successfully logged in', null);
   } catch (error) {
     const errorMessage = error instanceof HttpError ? error.message : 'Internal server error';
     const statusCode = error instanceof HttpError ? error.statusCode : 500;
 
-    log(req, 'ERROR', errorMessage);
+    await log(req, 'ERROR', errorMessage);
     responseHelper(res, 'error', statusCode, errorMessage, null);
     return;
   }
 };
 
-export const logoutController = (req: Request, res: Response): void => {
-  log(req, 'SUCCESS', 'Successfully logged out');
+export const logoutController = async (req: Request, res: Response): Promise<void> => {
+  await log(req, 'SUCCESS', 'Successfully logged out');
   res.clearCookie('accessToken', {
     httpOnly: true,
     secure: true,
@@ -115,20 +115,20 @@ export const refreshTokenController = async (req: Request, res: Response): Promi
       sameSite: 'strict',
     });
 
-    log(req, 'SUCCESS', 'Access token successfully refreshed');
+    await log(req, 'SUCCESS', 'Access token successfully refreshed');
     responseHelper(res, 'success', 200, 'Access token successfully refreshed', null);
   } catch (error) {
     const errorMessage = error instanceof HttpError ? error.message : 'Internal server error';
     const statusCode = error instanceof HttpError ? error.statusCode : 500;
 
-    log(req, 'ERROR', errorMessage);
+    await log(req, 'ERROR', errorMessage);
     responseHelper(res, 'error', statusCode, errorMessage, null);
     return;
   }
 };
 
 export const profileController = async (req: Request, res: Response): Promise<void> => {
-  log(req, 'SUCCESS', 'Profile retrieved successfully');
+  await log(req, 'SUCCESS', 'Profile retrieved successfully');
   responseHelper(res, 'success', 200, ' Authentication successful', req.user);
 };
 
@@ -136,19 +136,13 @@ export const getAllUserController = async (req: Request, res: Response): Promise
   try {
     const users = await getAllUserService();
 
-    if (users.length === 0) {
-      log(req, 'ERROR', 'No users found');
-      responseHelper(res, 'success', 404, 'Data not found', null);
-      return;
-    }
-
-    log(req, 'SUCCESS', 'Users retrieved successfully');
+    await log(req, 'SUCCESS', 'Users retrieved successfully');
     responseHelper(res, 'success', 200, 'Data successfully retrieved', users);
   } catch (error) {
     const errorMessage = error instanceof HttpError ? error.message : 'Internal server error';
     const statusCode = error instanceof HttpError ? error.statusCode : 500;
 
-    log(req, 'ERROR', errorMessage);
+    await log(req, 'ERROR', errorMessage);
     responseHelper(res, 'error', statusCode, errorMessage, null);
     return;
   }
@@ -159,7 +153,7 @@ export const getUserByIdController = async (req: Request, res: Response): Promis
     const userId = req.params.id;
 
     if (!userId) {
-      log(req, 'ERROR', 'Invalid user ID');
+      await log(req, 'ERROR', 'Invalid user ID');
       responseHelper(res, 'error', 400, 'Invalid parameters', null);
       return;
     }
@@ -167,18 +161,18 @@ export const getUserByIdController = async (req: Request, res: Response): Promis
     const user = await getUserByIdService(userId);
 
     if (!user) {
-      log(req, 'ERROR', 'User not found');
+      await log(req, 'ERROR', 'User not found');
       responseHelper(res, 'error', 404, 'Data not found', null);
       return;
     }
 
-    log(req, 'SUCCESS', 'User retrieved successfully');
+    await log(req, 'SUCCESS', 'User retrieved successfully');
     responseHelper(res, 'success', 200, 'Data successfully retrieved', user);
   } catch (error) {
     const errorMessage = error instanceof HttpError ? error.message : 'Internal server error';
     const statusCode = error instanceof HttpError ? error.statusCode : 500;
 
-    log(req, 'ERROR', errorMessage);
+    await log(req, 'ERROR', errorMessage);
     responseHelper(res, 'error', statusCode, errorMessage, null);
     return;
   }
@@ -189,7 +183,7 @@ export const editUserByIdController = async (req: Request, res: Response): Promi
     const userId = req.params.id;
 
     if (!userId) {
-      log(req, 'ERROR', 'Invalid user ID');
+      await log(req, 'ERROR', 'Invalid user ID');
       responseHelper(res, 'error', 400, 'Invalid parameters', null);
       return;
     }
@@ -197,7 +191,7 @@ export const editUserByIdController = async (req: Request, res: Response): Promi
     const validate = await userUpdateSchema.safeParseAsync(req.body);
 
     if (!validate.success) {
-      log(req, 'ERROR', 'Invalid parameters');
+      await log(req, 'ERROR', 'Invalid parameters');
       const parsedError = parseZodError(validate.error);
       responseHelper(res, 'error', 400, 'Invalid parameters', parsedError);
       return;
@@ -206,18 +200,18 @@ export const editUserByIdController = async (req: Request, res: Response): Promi
     const updatedUser = await editUserByIdService(userId, validate.data);
 
     if (!updatedUser) {
-      log(req, 'ERROR', 'No content to display');
+      await log(req, 'ERROR', 'No content to display');
       responseHelper(res, 'success', 404, 'No content to display', null);
       return;
     }
 
-    log(req, 'SUCCESS', 'User updated successfully');
+    await log(req, 'SUCCESS', 'User updated successfully');
     responseHelper(res, 'success', 200, 'Data successfully updated', updatedUser);
   } catch (error) {
     const errorMessage = error instanceof HttpError ? error.message : 'Internal server error';
     const statusCode = error instanceof HttpError ? error.statusCode : 500;
 
-    log(req, 'ERROR', errorMessage);
+    await log(req, 'ERROR', errorMessage);
     responseHelper(res, 'error', statusCode, errorMessage, null);
     return;
   }

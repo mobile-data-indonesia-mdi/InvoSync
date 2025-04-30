@@ -9,7 +9,7 @@ import {
   getProofPaymentController,
   // restorePaymentController,
 } from '@controllers/payment.controller';
-import { upload_payment } from '@utils/MulterSetup';
+import { upload_payment } from '@utils/multerSetup';
 import { authGuard } from '@middlewares/jwt.middleware';
 import { roleGuard } from '@middlewares/role.middleware';
 
@@ -18,7 +18,7 @@ const router = Router();
 router.get('/', authGuard, roleGuard(['finance', 'management']), getAllPaymentController);
 router.get('/:id', authGuard, roleGuard(['finance', 'management']), getPaymentByIdController);
 router.get(
-  '/client/:clientId',
+  '/client/:id',
   authGuard,
   roleGuard(['finance', 'management']),
   getPaymentByClientController,
