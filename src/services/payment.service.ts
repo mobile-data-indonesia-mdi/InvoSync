@@ -199,6 +199,54 @@ export const editPaymentService = async (
   }
 };
 
+export const deletePaymentByIdService = async (payment_id: string) => {
+  try {
+    const payment = await prisma.payment.findUnique({
+      where: {
+        payment_id,
+      },
+    });
+
+    if (!payment) {
+      throw new Error('Payment tidak ditemukan');
+    }
+
+    const invoiceID = payment.invoice_id;
+    const proofOfTransferPath = payment.proof_of_transfer;
+
+    // Hapus payment dari database
+    const deletedPayment = await prisma.$transaction(async tx => {
+      const deleted = await tx.payment.delete({
+        where: { payment_id },
+      });
+      await updateInvoiceAmountPaidService(tx, invoiceID);
+
+      return deleted;
+    });
+
+    // Menghapus file proof_of_transfer
+    if (proofOfTransferPath) {
+      const filePath = path.resolve(proofOfTransferPath);
+      if (fs.existsSync(filePath)) {
+        fs.unlink(filePath, err => {
+          if (err) {
+            console.error('Error deleting file:', err);
+          } else {
+            console.log(`File deleted: ${filePath}`);
+          }
+        });
+      } else {
+        console.warn(`File not found at: ${filePath}`);
+      }
+    }
+
+    return deletedPayment;
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
+    throw new Error(errorMessage);
+  }
+};
+
 export const getProofPaymentService = async (payment_filename: string) => {
   try {
     const proofOfTransferPath = path.resolve('uploads/payments', payment_filename); // example path: 'uploads/payments/12345.jpg'
