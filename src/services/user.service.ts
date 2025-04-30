@@ -14,7 +14,8 @@ export const registerService = async (userData: UserRequest) => {
     });
 
     if (existingUser) {
-      // throw new HttpError(409, 'Data already exists');
+      // throw new HttpError(409, 'Data already exists');\
+      throw new Error('Data already exists');
     }
 
     const hashedPassword = await bcrypt.hash(userData.password, 10);
@@ -29,16 +30,8 @@ export const registerService = async (userData: UserRequest) => {
 
     return newUser;
   } catch (error) {
-    // if (error instanceof Prisma.PrismaClientKnownRequestError) {
-    //   if (error.code === 'P2002') {
-    //     throw new HttpError(409, 'Data already exists');
-    //   }
-    // }
-    // if (error instanceof HttpError) {
-    //   throw error;
-    // }
-    // throw new HttpError(500, 'Internal server error');
-    console.log(error);
+    const errorMessage = error instanceof Error ? error.message : 'Internal Server Problem';
+    throw new Error(errorMessage);
   }
 };
 

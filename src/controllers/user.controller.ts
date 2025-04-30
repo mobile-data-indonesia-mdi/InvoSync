@@ -27,12 +27,10 @@ export const registerController = async (req: Request, res: Response): Promise<v
     ResponseHelper(res, 'success', 201, 'Data successfully created', null);
     return;
   } catch (error) {
-    // const statusCode = error instanceof HttpError ? error.statusCode : 500;
-    // const message = error instanceof HttpError ? error.message : 'Internal server error';
-    console.log(error);
-    ResponseHelper(res, 'error', 500, 'Internal server error', { error });
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
+
+    ResponseHelper(res, 'error', 500, errorMessage, { error: errorMessage });
     return;
-    // ResponseHelper(res, 'error', statusCode, message, { error: message });
   }
 };
 
