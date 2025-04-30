@@ -13,20 +13,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// model Log {
-//   id         BigInt   @id @default(autoincrement())
-//   level      String   // "info", "warn", "error", "debug"
-//   message    String
-//   context    String?  // misalnya: "UserService.create"
-//   meta       Json?    // info tambahan dalam bentuk JSON
-//   created_at  DateTime @default(now())
-//   createdBy  String?  // bisa "system" atau user ID/email
-
-//   @@index([level])
-//   @@index([created_at])
-// }
-
-
 model User {
   user_id         String @id @default(uuid())
   username        String    @unique
@@ -122,7 +108,7 @@ model Log{
   log_id              Int @id @default(autoincrement())
   ip                  String
   acces_token         String?
-  username           String  //username yang login 
+  username            String  //username yang login 
   method              String  // GET, POST, PUT, DELETE
   endpoint            String  // invoice/7e2a9a30-bfa4-4e1f-b99d-d61ef2943f77
   payload             Json?   // JSON.stringify(params) untuk menyimpan parameter request
