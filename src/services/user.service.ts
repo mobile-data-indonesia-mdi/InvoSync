@@ -1,12 +1,18 @@
-import { prisma } from '@config/db';
 import bcrypt from 'bcryptjs';
-import { type UserRequest, type UserLogin, userPublicSchema } from '@models/user.model';
-import jwt from 'jsonwebtoken';
-import env from '@config/env';
 import ms from 'ms';
+import jwt from 'jsonwebtoken';
+
+import { prisma } from '@config/db';
+import env from '@config/env';
+import {
+  type UserRegister,
+  type UserLogin,
+  type UserUpdate,
+  userPublicSchema,
+} from '@models/user.model';
 import HttpError from '@utils/httpError';
 
-export const registerService = async (userData: UserRequest) => {
+export const registerService = async (userData: UserRegister) => {
   try {
     const existingUser = await prisma.user.findUnique({
       where: {
@@ -159,7 +165,7 @@ export const getUserByIdService = async (user_id: string) => {
   }
 };
 
-export const editUserByIdService = async (user_id: string, userData: UserRequest) => {
+export const editUserByIdService = async (user_id: string, userData: UserUpdate) => {
   try {
     const user = await prisma.user.findFirst({
       where: {
@@ -171,16 +177,12 @@ export const editUserByIdService = async (user_id: string, userData: UserRequest
       throw new HttpError('User tidak ditemukan', 404);
     }
 
-    // Hash password before saving
-    const hashedPassword = await bcrypt.hash(userData.password, 10);
-
     const updatedUser = await prisma.user.update({
       where: {
         user_id,
       },
       data: {
         username: userData.username,
-        password: hashedPassword,
         role: userData.role,
       },
     });

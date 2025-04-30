@@ -2,7 +2,7 @@ import type { Request, Response } from 'express';
 import ms from 'ms';
 
 import env from '@config/env';
-import { userRequestSchema, userLoginSchema } from '@models/user.model';
+import { userRegisterSchema, userLoginSchema, userUpdateSchema } from '@models/user.model';
 import {
   registerService,
   loginService,
@@ -18,7 +18,7 @@ import HttpError from '@utils/httpError';
 
 export const registerController = async (req: Request, res: Response): Promise<void> => {
   try {
-    const validate = await userRequestSchema.safeParseAsync(req.body);
+    const validate = await userRegisterSchema.safeParseAsync(req.body);
 
     if (!validate.success) {
       log(req, 'ERROR', 'Invalid parameters');
@@ -36,6 +36,7 @@ export const registerController = async (req: Request, res: Response): Promise<v
 
     log(req, 'ERROR', errorMessage);
     responseHelper(res, 'error', statusCode, errorMessage, null);
+    return;
   }
 };
 
@@ -74,6 +75,7 @@ export const loginController = async (req: Request, res: Response): Promise<void
 
     log(req, 'ERROR', errorMessage);
     responseHelper(res, 'error', statusCode, errorMessage, null);
+    return;
   }
 };
 
@@ -121,6 +123,7 @@ export const refreshTokenController = async (req: Request, res: Response): Promi
 
     log(req, 'ERROR', errorMessage);
     responseHelper(res, 'error', statusCode, errorMessage, null);
+    return;
   }
 };
 
@@ -147,6 +150,7 @@ export const getAllUserController = async (req: Request, res: Response): Promise
 
     log(req, 'ERROR', errorMessage);
     responseHelper(res, 'error', statusCode, errorMessage, null);
+    return;
   }
 };
 
@@ -176,6 +180,7 @@ export const getUserByIdController = async (req: Request, res: Response): Promis
 
     log(req, 'ERROR', errorMessage);
     responseHelper(res, 'error', statusCode, errorMessage, null);
+    return;
   }
 };
 
@@ -189,7 +194,7 @@ export const editUserByIdController = async (req: Request, res: Response): Promi
       return;
     }
 
-    const validate = await userRequestSchema.safeParseAsync(req.body);
+    const validate = await userUpdateSchema.safeParseAsync(req.body);
 
     if (!validate.success) {
       log(req, 'ERROR', 'Invalid parameters');
@@ -214,5 +219,6 @@ export const editUserByIdController = async (req: Request, res: Response): Promi
 
     log(req, 'ERROR', errorMessage);
     responseHelper(res, 'error', statusCode, errorMessage, null);
+    return;
   }
 };

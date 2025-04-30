@@ -25,7 +25,7 @@ export const userSchema = z.object({
   updated_at: z.date(),
 });
 
-export const userRequestSchema = userSchema.pick({
+export const userRegisterSchema = userSchema.pick({
   username: true,
   password: true,
   role: true,
@@ -36,16 +36,21 @@ export const userLoginSchema = userSchema.pick({
   password: true,
 });
 
+export const userUpdateSchema = userSchema.pick({
+  username: true,
+  role: true,
+});
+
+export const UserUpdatePasswordSchema = userSchema.pick({
+  password: true,
+});
+
 export const userPublicSchema = userSchema.omit({
   password: true,
 });
 
-export const userChangePassword = userSchema.pick({
-  password: true,
-  created_at: true,
-  updated_at: true,
-});
-
-export type UserRequest = z.infer<typeof userRequestSchema>;
+export type UserRegister = z.infer<typeof userRegisterSchema>;
 export type UserLogin = z.infer<typeof userLoginSchema>;
+export type UserUpdatePassword = z.infer<typeof UserUpdatePasswordSchema>;
+export type UserUpdate = z.infer<typeof userUpdateSchema>;
 export type UserPublic = z.infer<typeof userPublicSchema>;

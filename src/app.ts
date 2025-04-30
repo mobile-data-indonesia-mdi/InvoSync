@@ -12,6 +12,7 @@ import paymentRoute from '@routes/payment.route';
 import corsOptions from '@config/cors';
 import { swaggerSpec } from '@config/swagger';
 import responseHelper from '@utils/responseHelper';
+import log from '@utils/logs';
 
 const app = express();
 
@@ -27,7 +28,8 @@ app.use('/payments', paymentRoute);
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-app.use((_req, res) => {
+app.use((req, res) => {
+  log(req, 'ERROR', 'Route not found');
   responseHelper(res, 'error', 404, 'Route not found', null);
   return;
 });

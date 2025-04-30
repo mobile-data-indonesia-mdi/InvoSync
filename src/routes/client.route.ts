@@ -5,7 +5,7 @@ import {
   getAllClientController,
   getClientByIdController,
   editClientByIdController,
-  deleteClientByIdController,
+  // deleteClientByIdController,
 } from '@controllers/client.controller';
 
 import { authGuard } from '@middlewares/jwt.middleware';
@@ -17,9 +17,6 @@ router.get('/', authGuard, roleGuard(['finance', 'management']), getAllClientCon
 router.get('/:id', authGuard, roleGuard(['finance', 'management']), getClientByIdController);
 router.post('/', authGuard, roleGuard(['finance']), createClientController);
 router.put('/:id', authGuard, roleGuard(['finance']), editClientByIdController);
-router.delete('/:id', authGuard, roleGuard(['finance']), deleteClientByIdController);
-
-//Test
-//router.post('/', createClientController);
+// router.delete('/:id', authGuard, roleGuard(['finance']), deleteClientByIdController);
 
 export default router;

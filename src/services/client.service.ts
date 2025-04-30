@@ -66,27 +66,27 @@ export const editClientByIdService = async (client_id: string, clientData: Clien
   }
 };
 
-export const deleteClientByIdService = async (client_id: string) => {
-  try {
-    const client = await prisma.client.findUnique({
-      where: {
-        client_id,
-      },
-    });
+// export const deleteClientByIdService = async (client_id: string) => {
+//   try {
+//     const client = await prisma.client.findUnique({
+//       where: {
+//         client_id,
+//       },
+//     });
 
-    if (!client) {
-      throw new Error('Data not found');
-    }
+//     if (!client) {
+//       throw new Error('Data not found');
+//     }
 
-    await prisma.client.delete({
-      where: {
-        client_id,
-      },
-    });
+//     await prisma.client.delete({
+//       where: {
+//         client_id,
+//       },
+//     });
 
-    return { message: 'Client deleted successfully' };
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
-    throw new Error(errorMessage);
-  }
-};
+//     return { message: 'Client deleted successfully' };
+//   } catch (error) {
+//     const errorMessage = error instanceof Error ? error.message : 'Internal server error';
+//     throw new Error(errorMessage);
+//   }
+// };
