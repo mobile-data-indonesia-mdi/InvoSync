@@ -19,4 +19,7 @@ router.post('/', authGuard, roleGuard(['finance']), createClientController);
 router.put('/:id', authGuard, roleGuard(['finance']), editClientByIdController);
 router.delete('/:id', authGuard, roleGuard(['finance']), deleteClientByIdController);
 
+//Test
+//router.post('/', createClientController);
+
 export default router;

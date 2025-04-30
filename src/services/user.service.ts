@@ -27,7 +27,7 @@ export const registerService = async (userData: UserRequest) => {
         role: userData.role,
       },
     });
-
+    
     return newUser;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Internal Server Problem';
@@ -69,7 +69,7 @@ export const loginService = async (userData: UserLogin) => {
       },
     );
 
-    return { accessToken, refreshToken };
+    return { accessToken, refreshToken};
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     throw new Error(errorMessage);

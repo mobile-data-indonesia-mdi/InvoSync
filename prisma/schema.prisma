@@ -117,3 +117,18 @@ model Payment{
   invoice_id          String
   invoice             Invoice @relation(fields: [invoice_id], references: [invoice_id], onDelete: Cascade)
 }
+
+model Log{
+  log_id              Int @id @default(autoincrement())
+  ip                  String
+  acces_token         String?
+  username           String  //username yang login 
+  method              String  // GET, POST, PUT, DELETE
+  endpoint            String  // invoice/7e2a9a30-bfa4-4e1f-b99d-d61ef2943f77
+  payload             Json?   // JSON.stringify(params) untuk menyimpan parameter request
+  status              String  // success, error
+  status_message      String
+  created_at          DateTime @default(now())
+
+  @@map("logs")
+}
