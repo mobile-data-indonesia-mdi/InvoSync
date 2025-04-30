@@ -4,6 +4,7 @@ import { type UserRequest, type UserLogin, userPublicSchema } from '@models/user
 import jwt from 'jsonwebtoken';
 import env from '@config/env';
 import ms from 'ms';
+import HttpError from '@utils/httpError';
 
 export const registerService = async (userData: UserRequest) => {
   try {
@@ -14,8 +15,7 @@ export const registerService = async (userData: UserRequest) => {
     });
 
     if (existingUser) {
-      // throw new HttpError(409, 'Data already exists');\
-      throw new Error('Data already exists');
+      throw new HttpError('Data already exists', 409);
     }
 
     const hashedPassword = await bcrypt.hash(userData.password, 10);
@@ -27,11 +27,14 @@ export const registerService = async (userData: UserRequest) => {
         role: userData.role,
       },
     });
-    
+
     return newUser;
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Internal Server Problem';
-    throw new Error(errorMessage);
+    if (error instanceof HttpError) {
+      throw error;
+    }
+
+    throw new HttpError('Internal Server Error', 500);
   }
 };
 
@@ -44,13 +47,13 @@ export const loginService = async (userData: UserLogin) => {
     });
 
     if (!user) {
-      throw new Error('Username atau password salah');
+      throw new HttpError('Username atau password salah', 401);
     }
 
     const isPasswordValid = await bcrypt.compare(userData.password, user.password);
 
     if (!isPasswordValid) {
-      throw new Error('Username atau password salah');
+      throw new HttpError('Username atau password salah', 401);
     }
 
     const accessToken = jwt.sign(
@@ -69,10 +72,13 @@ export const loginService = async (userData: UserLogin) => {
       },
     );
 
-    return { accessToken, refreshToken};
+    return { accessToken, refreshToken };
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
-    throw new Error(errorMessage);
+    if (error instanceof HttpError) {
+      throw error;
+    }
+
+    throw new HttpError('Internal Server Error', 500);
   }
 };
 
@@ -84,7 +90,7 @@ export const refreshTokenService = async (refreshToken: string) => {
     };
 
     if (!decoded) {
-      throw new Error('Access denied. Please log in first');
+      throw new HttpError('Access denied. Please log in first', 401);
     }
 
     const accessToken = jwt.sign(
@@ -98,60 +104,71 @@ export const refreshTokenService = async (refreshToken: string) => {
     return accessToken;
   } catch (error) {
     if (error instanceof jwt.JsonWebTokenError) {
-      throw new Error('Access denied. Please log in first');
+      throw new HttpError('Access denied. Please log in first', 401);
     }
 
-    const errorMessage = error instanceof Error ? error.message : 'Internal Server Problem';
-    throw new Error(errorMessage);
+    if (error instanceof HttpError) {
+      throw error;
+    }
+
+    throw new HttpError('Internal Server Error', 500);
   }
 };
 
 export const getAllUserService = async () => {
   try {
-    const users = await prisma.user.findMany();
+    const users = await prisma.user.findMany({
+      where: {
+        deleted_at: null,
+      },
+    });
 
     const parsedUsers = users.map(user => userPublicSchema.parse(user));
 
     return parsedUsers;
-    // return users;
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
-    throw new Error(errorMessage);
+    if (error instanceof HttpError) {
+      throw error;
+    }
+
+    throw new HttpError('Internal Server Error', 500);
   }
 };
 
 export const getUserByIdService = async (user_id: string) => {
   try {
-    const user = await prisma.user.findUnique({
+    const user = await prisma.user.findFirst({
       where: {
-        user_id,
+        AND: [{ user_id }, { deleted_at: null }],
       },
     });
 
     if (!user) {
-      throw new Error('User tidak ditemukan');
+      throw new HttpError('User tidak ditemukan', 404);
     }
 
-    // Parse user data into a public schema
     const parsedUser = userPublicSchema.parse(user);
 
     return parsedUser;
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
-    throw new Error(errorMessage);
+    if (error instanceof HttpError) {
+      throw error;
+    }
+
+    throw new HttpError('Internal Server Error', 500);
   }
 };
 
 export const editUserByIdService = async (user_id: string, userData: UserRequest) => {
   try {
-    const user = await prisma.user.findUnique({
+    const user = await prisma.user.findFirst({
       where: {
-        user_id,
+        AND: [{ user_id }, { deleted_at: null }],
       },
     });
 
     if (!user) {
-      throw new Error('User tidak ditemukan');
+      throw new HttpError('User tidak ditemukan', 404);
     }
 
     // Hash password before saving
@@ -173,35 +190,41 @@ export const editUserByIdService = async (user_id: string, userData: UserRequest
 
     return parsedUser;
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
-    throw new Error(errorMessage);
-  }
-};
-
-export const softDeleteUserByIdService = async (user_id: string) => {
-  try {
-    const user = await prisma.user.findUnique({
-      where: {
-        user_id,
-      },
-    });
-
-    if (!user) {
-      throw new Error('User tidak ditemukan');
+    if (error instanceof HttpError) {
+      throw error;
     }
 
-    await prisma.user.update({
-      where: {
-        user_id,
-      },
-      data: {
-        deleted_at: new Date(),
-      },
-    });
-
-    return { message: 'User berhasil di-soft delete' };
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
-    throw new Error(errorMessage);
+    throw new HttpError('Internal Server Error', 500);
   }
 };
+
+// export const softDeleteUserByIdService = async (user_id: string) => {
+//   try {
+//     const user = await prisma.user.findUnique({
+//       where: {
+//         user_id,
+//       },
+//     });
+
+//     if (!user) {
+//       throw new Error('User tidak ditemukan');
+//     }
+
+//     await prisma.user.update({
+//       where: {
+//         user_id,
+//       },
+//       data: {
+//         deleted_at: new Date(),
+//       },
+//     });
+
+//     return { message: 'User berhasil di-soft delete' };
+//   } catch (error) {
+//     if (error instanceof HttpError) {
+//       throw error;
+//     }
+
+//     throw new HttpError('Internal Server Error', 500);
+//   }
+// };

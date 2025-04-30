@@ -39,7 +39,7 @@ export const createPaymentService = async (
       const extension = file.mimetype.split('/')[1]; // Ambil ekstensi file
       const newFilename = `${createdPayment.payment_id}.${extension}`;
       const newPath = path.join(path.dirname(oldPath), newFilename);
-      
+
       // Rename file untuk menggunakan payment_id
       fs.rename(oldPath, newPath, (err: NodeJS.ErrnoException | null) => {
         if (err) {
@@ -250,11 +250,10 @@ export const deletePaymentByIdService = async (payment_id: string) => {
 export const getProofPaymentService = async (payment_filename: string) => {
   try {
     const proofOfTransferPath = path.resolve('uploads/payments', payment_filename); // example path: 'uploads/payments/12345.jpg'
-    
+
     return proofOfTransferPath;
-  }
- catch (error) {
-  const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
     throw new Error(errorMessage);
   }
 };

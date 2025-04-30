@@ -1,25 +1,8 @@
-import { ZodError } from 'zod';
 import type { Response } from 'express';
 
 type ResponseData = Record<string, unknown> | unknown[] | null;
 
-export const parseZodError = (error: ZodError) => {
-  const formatted: Record<string, string[]> = {};
-
-  error.errors.forEach(err => {
-    const field = err.path[0] as string;
-
-    if (!formatted[field]) {
-      formatted[field] = [];
-    }
-
-    formatted[field].push(err.message);
-  });
-
-  return { error: formatted };
-};
-
-export const ResponseHelper = (
+export const responseHelper = (
   res: Response,
   status: string,
   code: number,
@@ -33,3 +16,5 @@ export const ResponseHelper = (
     data: data,
   });
 };
+
+export default responseHelper;

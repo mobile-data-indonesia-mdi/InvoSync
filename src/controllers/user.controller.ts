@@ -7,71 +7,51 @@ import {
   getUserByIdService,
   editUserByIdService,
 } from '@services/user.service';
-import { createLogService } from '@services/log.service';
 import { userRequestSchema, userLoginSchema } from '@models/user.model';
-import type { LogRequestSchema } from '@models/log.model';
-import { parseZodError, ResponseHelper } from '@utils/ResponseHelper';
+
+import responseHelper from '@utils/responseHelper';
+import parseZodError from '@utils/parseZodError';
 import env from '@config/env';
 import ms from 'ms';
+import HttpError from '@utils/httpError';
+import log from '@utils/logs';
 
 export const registerController = async (req: Request, res: Response): Promise<void> => {
-  let logData: LogRequestSchema = {
-    ip: req.ip || 'unknown',
-    access_token: req.cookies['accessToken'],
-    method: req.method as 'GET' | 'POST' | 'PUT' | 'DELETE',
-    endpoint: req.originalUrl,
-    payload: req.body,
-    status: '' as 'SUCCESS' | 'ERROR',
-    status_message: '',
-  };
   try {
     const validate = await userRequestSchema.safeParseAsync(req.body);
 
     if (!validate.success) {
-      logData = { ...logData, status: 'ERROR', status_message: 'Invalid parameters' };
-      await createLogService(logData);
+      log(req, 'ERROR', 'Invalid parameters');
 
-      const parsed = parseZodError(validate.error);
-      ResponseHelper(res, 'error', 400, 'Invalid parameters', parsed);
+      const parsedError = parseZodError(validate.error);
+      responseHelper(res, 'error', 400, 'Invalid parameters', parsedError);
       return;
     }
 
     await registerService(validate.data);
-
-    logData = { ...logData, status: 'SUCCESS', status_message: 'Data successfully created' };
-    await createLogService(logData);
-
-    ResponseHelper(res, 'success', 201, 'Data successfully created', null);
+    log(req, 'SUCCESS', 'Data successfully created');
+    responseHelper(res, 'success', 201, 'Data successfully created', null);
     return;
   } catch (error) {
-    logData = { ...logData, status: 'ERROR', status_message: 'Internal server error' };
-    await createLogService(logData);
+    if (error instanceof HttpError) {
+      log(req, 'ERROR', error.message);
+      responseHelper(res, 'error', error.statusCode, error.message, null);
+    } else {
+      log(req, 'ERROR', 'Internal server error');
+      responseHelper(res, 'error', 500, 'Internal server error', null);
+    }
 
-    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
-    ResponseHelper(res, 'error', 500, 'Internal server error', { error: errorMessage });
     return;
   }
 };
 
 export const loginController = async (req: Request, res: Response): Promise<void> => {
-  let logData: LogRequestSchema = {
-    ip: req.ip || 'unknown',
-    access_token: req.cookies['accessToken'],
-    method: req.method as 'GET' | 'POST' | 'PUT' | 'DELETE',
-    endpoint: req.originalUrl,
-    payload: req.body,
-    status: '' as 'SUCCESS' | 'ERROR',
-    status_message: '',
-  };
   try {
     const validate = await userLoginSchema.safeParseAsync(req.body);
 
     if (!validate.success) {
-      logData = { ...logData, status: 'ERROR', status_message: 'Invalid parameters' };
-      await createLogService(logData);
-
       const parsed = parseZodError(validate.error);
-      ResponseHelper(res, 'error', 400, 'Invalid parameters', parsed);
+      responseHelper(res, 'error', 400, 'Invalid parameters', parsed);
       return;
     }
 
@@ -93,36 +73,16 @@ export const loginController = async (req: Request, res: Response): Promise<void
       sameSite: 'none',
     });
 
-    logData = {
-      ...logData,
-      access_token: accessToken,
-      status: 'SUCCESS',
-      status_message: 'Succesful login',
-    };
-    await createLogService(logData);
-
-    ResponseHelper(res, 'success', 200, 'Successfully Login', null);
+    responseHelper(res, 'success', 200, 'Successfully Login', null);
     return;
   } catch (error) {
-    logData = { ...logData, status: 'ERROR', status_message: 'Internal server error' };
-    await createLogService(logData);
-
     const errorMessage = error instanceof Error ? error.message : 'Internal server error';
-    ResponseHelper(res, 'error', 500, 'Internal server error', { error: errorMessage });
+    responseHelper(res, 'error', 500, 'Internal server error', { error: errorMessage });
     return;
   }
 };
 
 export const logoutController = async (_req: Request, res: Response): Promise<void> => {
-  let logData: LogRequestSchema = {
-    ip: _req.ip || 'unknown',
-    access_token: _req.cookies['accessToken'],
-    method: _req.method as 'GET' | 'POST' | 'PUT' | 'DELETE',
-    endpoint: _req.originalUrl,
-    payload: _req.body,
-    status: '' as 'SUCCESS' | 'ERROR',
-    status_message: '',
-  };
   try {
     res.clearCookie('accessToken', {
       httpOnly: true,
@@ -138,44 +98,22 @@ export const logoutController = async (_req: Request, res: Response): Promise<vo
       sameSite: 'none',
     });
 
-    logData = { ...logData, status: 'SUCCESS', status_message: 'Successfully logged out' };
-    await createLogService(logData);
-
-    ResponseHelper(res, 'success', 204, 'Successfully logged out', null);
+    responseHelper(res, 'success', 204, 'Successfully logged out', null);
     return;
   } catch (error) {
-    logData = { ...logData, status: 'ERROR', status_message: 'Internal server error' };
-    await createLogService(logData);
-
     const errorMessage = error instanceof Error ? error.message : 'Internal server error';
-    ResponseHelper(res, 'error', 500, 'Internal server error', { error: errorMessage });
+    responseHelper(res, 'error', 500, 'Internal server error', { error: errorMessage });
     return;
   }
 };
 
 export const refreshTokenController = async (req: Request, res: Response): Promise<void> => {
-  let logData: LogRequestSchema = {
-    ip: req.ip || 'unknown',
-    access_token: req.cookies['accessToken'],
-    method: req.method as 'GET' | 'POST' | 'PUT' | 'DELETE',
-    endpoint: req.originalUrl,
-    payload: req.body,
-    status: '' as 'SUCCESS' | 'ERROR',
-    status_message: '',
-  };
   try {
     console.log('Masuk ke refresh token controller');
     const refreshToken = req.cookies['refreshToken'];
 
     if (!refreshToken) {
-      logData = {
-        ...logData,
-        status: 'ERROR',
-        status_message: 'Access denied. Please log in first',
-      };
-      await createLogService(logData);
-
-      ResponseHelper(res, 'error', 401, 'Access denied. Please log in first', null);
+      responseHelper(res, 'error', 401, 'Access denied. Please log in first', null);
       return;
     }
 
@@ -189,29 +127,18 @@ export const refreshTokenController = async (req: Request, res: Response): Promi
       sameSite: 'strict',
     });
 
-    logData = {
-      ...logData,
-      access_token: newAccessToken,
-      status: 'SUCCESS',
-      status_message: 'Data succesfully updated',
-    };
-    await createLogService(logData);
-
-    ResponseHelper(res, 'success', 200, 'Data Successfully updated', null);
+    responseHelper(res, 'success', 200, 'Data Successfully updated', null);
     return;
   } catch (error) {
-    logData = { ...logData, status: 'ERROR', status_message: 'Internal server error' };
-    await createLogService(logData);
-
     const errorMessage = error instanceof Error ? error.message : 'Internal server error';
-    ResponseHelper(res, 'error', 500, 'Internal server error', { error: errorMessage });
+    responseHelper(res, 'error', 500, 'Internal server error', { error: errorMessage });
     return;
   }
 };
 
 export const profileController = async (req: Request, res: Response): Promise<void> => {
   if (!req.user) {
-    ResponseHelper(res, 'error', 401, 'Internal server error', null);
+    responseHelper(res, 'error', 401, 'Internal server error', null);
     return;
   }
 
@@ -225,140 +152,76 @@ export const profileController = async (req: Request, res: Response): Promise<vo
 };
 
 export const getAllUserController = async (_req: Request, res: Response): Promise<void> => {
-  let logData: LogRequestSchema = {
-    ip: _req.ip || 'unknown',
-    access_token: _req.cookies['accessToken'],
-    method: _req.method as 'GET' | 'POST' | 'PUT' | 'DELETE',
-    endpoint: _req.originalUrl,
-    payload: _req.body,
-    status: '' as 'SUCCESS' | 'ERROR',
-    status_message: '',
-  };
   try {
     const users = await getAllUserService();
 
     if (users.length === 0) {
-      logData = { ...logData, status: 'SUCCESS', status_message: 'No content to display' };
-      await createLogService(logData);
-
-      ResponseHelper(res, 'success', 404, 'Data not found', null);
+      responseHelper(res, 'success', 404, 'Data not found', null);
       return;
     }
 
-    logData = { ...logData, status: 'SUCCESS', status_message: 'Data successfully retrieved' };
-    await createLogService(logData);
-
-    ResponseHelper(res, 'success', 200, 'Data successfully retrieved', users);
+    responseHelper(res, 'success', 200, 'Data successfully retrieved', users);
     return;
   } catch (error) {
-    logData = { ...logData, status: 'ERROR', status_message: 'Internal server error' };
-    await createLogService(logData);
-
     const errorMessage = error instanceof Error ? error.message : 'Internal server error';
-    ResponseHelper(res, 'error', 500, 'Internal server error', { error: errorMessage });
+    responseHelper(res, 'error', 500, 'Internal server error', { error: errorMessage });
     return;
   }
 };
 
 export const getUserByIdController = async (req: Request, res: Response): Promise<void> => {
-  let logData: LogRequestSchema = {
-    ip: req.ip || 'unknown',
-    access_token: req.cookies['accessToken'],
-    method: req.method as 'GET' | 'POST' | 'PUT' | 'DELETE',
-    endpoint: req.originalUrl,
-    payload: req.body,
-    status: '' as 'SUCCESS' | 'ERROR',
-    status_message: '',
-  };
   try {
     const userId = req.params.id;
 
     if (!userId) {
-      logData = { ...logData, status: 'ERROR', status_message: 'Invalid parameters' };
-      await createLogService(logData);
-
-      ResponseHelper(res, 'error', 400, 'Invalid parameters', null);
+      responseHelper(res, 'error', 400, 'Invalid parameters', null);
       return;
     }
 
     const user = await getUserByIdService(userId);
 
     if (!user) {
-      logData = { ...logData, status: 'ERROR', status_message: 'No content to display' };
-      await createLogService(logData);
-
-      ResponseHelper(res, 'error', 404, 'Data not found', null);
+      responseHelper(res, 'error', 404, 'Data not found', null);
       return;
     }
-
-    logData = { ...logData, status: 'SUCCESS', status_message: 'Data successfully retrieved' };
-    await createLogService(logData);
-
-    ResponseHelper(res, 'success', 200, 'Data successfully retrieved', user);
+    responseHelper(res, 'success', 200, 'Data successfully retrieved', user);
     return;
   } catch (error) {
-    logData = { ...logData, status: 'ERROR', status_message: 'Internal server error' };
-    await createLogService(logData);
-
     const errorMessage = error instanceof Error ? error.message : 'Internal server error';
-    ResponseHelper(res, 'error', 500, 'Internal server error', { error: errorMessage });
+    responseHelper(res, 'error', 500, 'Internal server error', { error: errorMessage });
     return;
   }
 };
 
 export const editUserByIdController = async (req: Request, res: Response): Promise<void> => {
-  let logData: LogRequestSchema = {
-    ip: req.ip || 'unknown',
-    access_token: req.cookies['accessToken'],
-    method: req.method as 'GET' | 'POST' | 'PUT' | 'DELETE',
-    endpoint: req.originalUrl,
-    payload: req.body,
-    status: '' as 'SUCCESS' | 'ERROR',
-    status_message: '',
-  };
   try {
     const userId = req.params.id;
 
     if (!userId) {
-      logData = { ...logData, status: 'ERROR', status_message: 'Invalid parameters' };
-      await createLogService(logData);
-
-      ResponseHelper(res, 'error', 400, 'Invalid parameters', null);
+      responseHelper(res, 'error', 400, 'Invalid parameters', null);
       return;
     }
 
     const validate = await userRequestSchema.safeParseAsync(req.body);
 
     if (!validate.success) {
-      logData = { ...logData, status: 'ERROR', status_message: 'Invalid parameters' };
-      await createLogService(logData);
-
       const parsed = parseZodError(validate.error);
-      ResponseHelper(res, 'error', 400, 'Invalid parameters', parsed);
+      responseHelper(res, 'error', 400, 'Invalid parameters', parsed);
       return;
     }
 
     const updatedUser = await editUserByIdService(userId, validate.data);
 
     if (!updatedUser) {
-      logData = { ...logData, status: 'SUCCESS', status_message: 'No content to display' };
-      await createLogService(logData);
-
-      ResponseHelper(res, 'success', 404, 'No content to display', null);
+      responseHelper(res, 'success', 404, 'No content to display', null);
       return;
     }
 
-    logData = { ...logData, status: 'SUCCESS', status_message: 'Data successfully updated' };
-    await createLogService(logData);
-
-    ResponseHelper(res, 'success', 200, 'Data Successfully updated', updatedUser);
+    responseHelper(res, 'success', 200, 'Data Successfully updated', updatedUser);
     return;
   } catch (error) {
-    logData = { ...logData, status: 'ERROR', status_message: 'Internal server error' };
-    await createLogService(logData);
-
     const errorMessage = error instanceof Error ? error.message : 'Internal server error';
-    ResponseHelper(res, 'error', 500, 'Internal server error', { error: errorMessage });
+    responseHelper(res, 'error', 500, 'Internal server error', { error: errorMessage });
     return;
   }
 };
@@ -368,22 +231,22 @@ export const editUserByIdController = async (req: Request, res: Response): Promi
 //     const userId = req.params.id;
 
 //     if (!userId) {
-//       ResponseHelper(res, 'error', 400, 'Invalid parameters', null);
+//       responseHelper(res, 'error', 400, 'Invalid parameters', null);
 //       return;
 //     }
 
 //     const deletedUser = await deleteUserByIdService(userId);
 
 //     if (!deletedUser) {
-//       ResponseHelper(res, 'success', 404, 'No content to display', null);
+//       responseHelper(res, 'success', 404, 'No content to display', null);
 //       return;
 //     }
 
-//     ResponseHelper(res, 'success', 204, 'Data successfully deleted', deletedUser);
+//     responseHelper(res, 'success', 204, 'Data successfully deleted', deletedUser);
 //     return;
 //   } catch (error) {
 //     const errorMessage = error instanceof Error ? error.message : 'Internal server error';
-//     ResponseHelper(res, 'error', 500, 'Internal server error', { error: errorMessage });
+//     responseHelper(res, 'error', 500, 'Internal server error', { error: errorMessage });
 //     return;
 //   }
 // };

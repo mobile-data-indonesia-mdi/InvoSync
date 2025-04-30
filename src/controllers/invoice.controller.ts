@@ -6,7 +6,8 @@ import {
   updateInvoiceByIdService,
   deleteInvoiceByIdService,
 } from '@services/invoice.service';
-import { parseZodError, ResponseHelper } from '@utils/ResponseHelper';
+import responseHelper from '@utils/responseHelper';
+import parseZodError from '@utils/parseZodError';
 import {
   invoiceWithDetailsRequestSchema,
   invoiceWithDetailsUpdateSchema,
@@ -31,20 +32,20 @@ export const getAllInvoiceController = async (req: Request, res: Response): Prom
     logData = { ...logData, status: 'SUCCESS', status_message: 'Data successfully retrieved' };
     await createLogService(logData);
 
-    return ResponseHelper(res, 'success', 200, 'Data successfully retrieved', invoices);
+    return responseHelper(res, 'success', 200, 'Data successfully retrieved', invoices);
   } catch (error) {
     if (error instanceof ZodError) {
       logData = { ...logData, status: 'ERROR', status_message: 'Invalid parameters' };
       await createLogService(logData);
 
       const formattedError = parseZodError(error);
-      return ResponseHelper(res, 'error', 400, 'Invalid parameters', formattedError);
+      return responseHelper(res, 'error', 400, 'Invalid parameters', formattedError);
     } else {
       logData = { ...logData, status: 'ERROR', status_message: 'Internal server error' };
       await createLogService(logData);
 
       const errorMessage = error instanceof Error ? error.message : 'Internal server error';
-      return ResponseHelper(res, 'error', 500, 'Internal server error', { error: errorMessage });
+      return responseHelper(res, 'error', 500, 'Internal server error', { error: errorMessage });
     }
   }
 };
@@ -67,7 +68,7 @@ export const createInvoiceController = async (req: Request, res: Response): Prom
       await createLogService(logData);
 
       const parsed = parseZodError(validate.error);
-      return ResponseHelper(res, 'error', 400, 'Invalid parameters', parsed);
+      return responseHelper(res, 'error', 400, 'Invalid parameters', parsed);
     }
 
     const invoice = await createInvoiceService(validate.data);
@@ -75,20 +76,20 @@ export const createInvoiceController = async (req: Request, res: Response): Prom
     logData = { ...logData, status: 'SUCCESS', status_message: 'Data successfully created' };
     await createLogService(logData);
 
-    return ResponseHelper(res, 'success', 201, 'Data successfully created', invoice);
+    return responseHelper(res, 'success', 201, 'Data successfully created', invoice);
   } catch (error) {
     if (error instanceof ZodError) {
       logData = { ...logData, status: 'ERROR', status_message: 'Invalid parameters' };
       await createLogService(logData);
 
       const formattedError = parseZodError(error);
-      return ResponseHelper(res, 'error', 400, 'Invalid parameters', formattedError);
+      return responseHelper(res, 'error', 400, 'Invalid parameters', formattedError);
     } else {
       logData = { ...logData, status: 'ERROR', status_message: 'Internal server error' };
       await createLogService(logData);
 
       const errorMessage = error instanceof Error ? error.message : 'Internal server error';
-      return ResponseHelper(res, 'error', 500, 'Internal server error', { error: errorMessage });
+      return responseHelper(res, 'error', 500, 'Internal server error', { error: errorMessage });
     }
   }
 };
@@ -110,7 +111,7 @@ export const getInvoiceByIdController = async (req: Request, res: Response): Pro
       logData = { ...logData, status: 'ERROR', status_message: 'Invalid parameters' };
       await createLogService(logData);
 
-      return ResponseHelper(res, 'error', 400, 'Invalid parameters', {
+      return responseHelper(res, 'error', 400, 'Invalid parameters', {
         message: 'Invoice ID is required',
       });
     }
@@ -120,20 +121,20 @@ export const getInvoiceByIdController = async (req: Request, res: Response): Pro
     logData = { ...logData, status: 'SUCCESS', status_message: 'Data successfully retrieved' };
     await createLogService(logData);
 
-    return ResponseHelper(res, 'success', 200, 'Data successfully retrieved', invoice);
+    return responseHelper(res, 'success', 200, 'Data successfully retrieved', invoice);
   } catch (error) {
     if (error instanceof ZodError) {
       logData = { ...logData, status: 'ERROR', status_message: 'Invalid parameters' };
       await createLogService(logData);
 
       const formattedError = parseZodError(error);
-      return ResponseHelper(res, 'error', 400, 'Invalid parameters', formattedError);
+      return responseHelper(res, 'error', 400, 'Invalid parameters', formattedError);
     } else {
       logData = { ...logData, status: 'ERROR', status_message: 'Internal server error' };
       await createLogService(logData);
 
       const errorMessage = error instanceof Error ? error.message : 'Internal server error';
-      return ResponseHelper(res, 'error', 500, 'Internal server error', { error: errorMessage });
+      return responseHelper(res, 'error', 500, 'Internal server error', { error: errorMessage });
     }
   }
 };
@@ -155,7 +156,7 @@ export const updateInvoiceByIdController = async (req: Request, res: Response): 
       logData = { ...logData, status: 'ERROR', status_message: 'Invalid parameters' };
       await createLogService(logData);
 
-      return ResponseHelper(res, 'error', 400, 'Invalid parameters', {
+      return responseHelper(res, 'error', 400, 'Invalid parameters', {
         message: 'Invoice ID is required',
       });
     }
@@ -167,7 +168,7 @@ export const updateInvoiceByIdController = async (req: Request, res: Response): 
       await createLogService(logData);
 
       const parsed = parseZodError(validate.error);
-      return ResponseHelper(res, 'error', 400, 'Invalid parameters', parsed);
+      return responseHelper(res, 'error', 400, 'Invalid parameters', parsed);
     }
 
     const invoice = await updateInvoiceByIdService(invoice_id, validate.data);
@@ -175,20 +176,20 @@ export const updateInvoiceByIdController = async (req: Request, res: Response): 
     logData = { ...logData, status: 'SUCCESS', status_message: 'Data successfully updated' };
     await createLogService(logData);
 
-    return ResponseHelper(res, 'success', 200, 'Data Successfully updated', invoice);
+    return responseHelper(res, 'success', 200, 'Data Successfully updated', invoice);
   } catch (error) {
     if (error instanceof ZodError) {
       logData = { ...logData, status: 'ERROR', status_message: 'Invalid parameters' };
       await createLogService(logData);
 
       const formattedError = parseZodError(error);
-      return ResponseHelper(res, 'error', 400, 'Invalid parameters', formattedError);
+      return responseHelper(res, 'error', 400, 'Invalid parameters', formattedError);
     } else {
       logData = { ...logData, status: 'ERROR', status_message: 'Internal server error' };
       await createLogService(logData);
 
       const errorMessage = error instanceof Error ? error.message : 'Internal server error';
-      return ResponseHelper(res, 'error', 500, 'Internal server error', { error: errorMessage });
+      return responseHelper(res, 'error', 500, 'Internal server error', { error: errorMessage });
     }
   }
 };
@@ -210,7 +211,7 @@ export const deleteInvoiceByIdController = async (req: Request, res: Response): 
       logData = { ...logData, status: 'ERROR', status_message: 'Invalid parameters' };
       await createLogService(logData);
 
-      return ResponseHelper(res, 'error', 400, 'Invalid parameters', {
+      return responseHelper(res, 'error', 400, 'Invalid parameters', {
         message: 'Invoice ID is required',
       });
     }
@@ -220,20 +221,20 @@ export const deleteInvoiceByIdController = async (req: Request, res: Response): 
     logData = { ...logData, status: 'SUCCESS', status_message: 'Data successfully deleted' };
     await createLogService(logData);
 
-    return ResponseHelper(res, 'success', 204, 'Data successfully deleted', null);
+    return responseHelper(res, 'success', 204, 'Data successfully deleted', null);
   } catch (error) {
     if (error instanceof ZodError) {
       logData = { ...logData, status: 'ERROR', status_message: 'Invalid parameters' };
       await createLogService(logData);
 
       const formattedError = parseZodError(error);
-      return ResponseHelper(res, 'error', 400, 'Invalid parameters', formattedError);
+      return responseHelper(res, 'error', 400, 'Invalid parameters', formattedError);
     } else {
       logData = { ...logData, status: 'ERROR', status_message: 'Internal server error' };
       await createLogService(logData);
 
       const errorMessage = error instanceof Error ? error.message : 'Internal server error';
-      return ResponseHelper(res, 'error', 500, 'Internal server error', { error: errorMessage });
+      return responseHelper(res, 'error', 500, 'Internal server error', { error: errorMessage });
     }
   }
 };

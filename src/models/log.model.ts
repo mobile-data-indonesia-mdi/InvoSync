@@ -5,7 +5,7 @@ export const logSchema = z.object({
   ip: z.string().ip(),
   access_token: z.string().optional(),
   username: z.string().default('Guest'),
-  method: z.enum(['GET', 'POST', 'PUT', 'DELETE']),
+  method: z.enum(['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS', 'HEAD']),
   endpoint: z.string().min(1, { message: 'Endpoint is required' }),
   payload: z.object({}).optional(),
   status: z.enum(['SUCCESS', 'ERROR']),

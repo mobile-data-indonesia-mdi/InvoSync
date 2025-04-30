@@ -22,6 +22,7 @@ model User {
   created_at      DateTime @default(now())
   updated_at      DateTime @updatedAt
 
+  @@index([user_id])
   @@map("users")
 }
 
@@ -39,6 +40,7 @@ model Client{
 
   invoices        Invoice[]
 
+  @@index([client_id])
   @@map("clients")
 }
 
@@ -68,6 +70,7 @@ model Invoice{
   //relasi invoice - payment
   payments            Payment[]
 
+  @@index([invoice_id, invoice_number])
   @@map("invoices")
 }
 
@@ -81,11 +84,13 @@ model InvoiceDetail{
   created_at            DateTime  @default(now())
   updated_at            DateTime  @updatedAt
 
-  @@map("invoice_details")
 
   //relasi invoice - invoice_detail
   invoice_id        String
   invoice           Invoice @relation(fields: [invoice_id], references: [invoice_id], onDelete: Cascade)
+
+  @@index([invoice_detail_id])
+  @@map("invoice_details")
 }
 
 model Payment{
@@ -97,11 +102,13 @@ model Payment{
   created_at            DateTime @default(now())
   updated_at            DateTime @updatedAt
 
-  @@map("payments")
 
   //relasi invoice - payment
   invoice_id          String
   invoice             Invoice @relation(fields: [invoice_id], references: [invoice_id], onDelete: Cascade)
+
+  @@index([payment_id])
+  @@map("payments")
 }
 
 model Log{
@@ -116,5 +123,6 @@ model Log{
   status_message      String
   created_at          DateTime @default(now())
 
+  @@index([created_at, log_id, username])
   @@map("logs")
 }
