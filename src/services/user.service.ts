@@ -4,7 +4,6 @@ import { type UserRequest, type UserLogin, userPublicSchema } from '@models/user
 import jwt from 'jsonwebtoken';
 import env from '@config/env';
 import ms from 'ms';
-import { createLogService } from './log.service';
 
 export const registerService = async (userData: UserRequest) => {
   try {
@@ -27,8 +26,6 @@ export const registerService = async (userData: UserRequest) => {
         role: userData.role,
       },
     });
-
-    await createLogService(newUser.user_id, 'REGISTER', 'success');
     
     return newUser;
   } catch (error) {
@@ -71,9 +68,7 @@ export const loginService = async (userData: UserLogin) => {
       },
     );
 
-    await createLogService(user.user_id, 'LOGIN', 'success');
-
-    return { accessToken, refreshToken };
+    return { accessToken, refreshToken};
   } catch (error) {
     console.error('Error login:', error);
     const errorMessage = error instanceof Error ? error.message : 'Internal server error';
