@@ -18,9 +18,7 @@ const router = Router();
 router.get('/', authGuard, roleGuard(['finance', 'management']), getAllPaymentController);
 router.get('/:id', authGuard, roleGuard(['finance', 'management']), getPaymentByIdController);
 router.get('/client/:clientId', authGuard, roleGuard(['finance', 'management']), getPaymentByClientController);
-router.get('/upload/:id', authGuard, roleGuard(['finance', 'management']), getProofPaymentController);
-//router.get('/upload/:filename', getProofPaymentController);
-//router.use('/upload', authGuard, roleGuard(['finance', 'management']), express.static(path.join('uploads/payments')));
+router.get('/upload/:filename', authGuard, roleGuard(['finance', 'management']), getProofPaymentController);
 
 router.post('/', authGuard, roleGuard(['finance']), upload_payment.single('proof_of_transfer'), createPaymentController);
 router.put('/:id', authGuard, roleGuard(['finance']), upload_payment.single('proof_of_transfer'), editPaymentController);
