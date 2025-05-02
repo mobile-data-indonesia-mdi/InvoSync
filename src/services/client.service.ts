@@ -2,20 +2,6 @@ import { prisma } from '@config/db';
 import { type ClientRequest } from '@models/client.model';
 import HttpError from '@utils/httpError';
 
-export const getAllClientService = async () => {
-  try {
-    const clients = await prisma.client.findMany();
-
-    return clients;
-  } catch (error) {
-    if (error instanceof HttpError) {
-      throw error;
-    }
-
-    throw new HttpError('Internal Server Error', 500);
-  }
-};
-
 export const createClientService = async (clientData: ClientRequest) => {
   try {
     const existingClient = await prisma.client.findUnique({
@@ -33,6 +19,20 @@ export const createClientService = async (clientData: ClientRequest) => {
     });
 
     return client;
+  } catch (error) {
+    if (error instanceof HttpError) {
+      throw error;
+    }
+
+    throw new HttpError('Internal Server Error', 500);
+  }
+};
+
+export const getAllClientService = async () => {
+  try {
+    const clients = await prisma.client.findMany();
+
+    return clients;
   } catch (error) {
     if (error instanceof HttpError) {
       throw error;
