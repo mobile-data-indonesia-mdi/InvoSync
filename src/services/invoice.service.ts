@@ -78,7 +78,7 @@ export const createInvoiceService = async (invoiceData: InvoiceWithDetailsReques
     throw new HttpError('Internal Server Error', 500);
   }
 };
-
+  
 export const getAllInvoiceService = async () => {
   try {
     const invoices = await prisma.invoice.findMany({

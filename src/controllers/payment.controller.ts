@@ -5,7 +5,7 @@ import {
   getAllPaymentService,
   getPaymentByClientService,
   getPaymentByIdService,
-  editPaymentService,
+  editPaymentService, 
   deletePaymentByIdService,
   getProofPaymentService,
 } from '@services/payment.service';
