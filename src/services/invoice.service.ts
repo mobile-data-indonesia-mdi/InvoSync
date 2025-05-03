@@ -6,6 +6,7 @@ import {
 } from '@models/invoice.model';
 import type { Prisma } from '@prisma/client';
 import HttpError from '@utils/httpError';
+import { updatePaymentColInvoiceNumberService } from './payment.service';
 
 export const createInvoiceService = async (invoiceData: InvoiceWithDetailsRequest) => {
   try {
@@ -202,6 +203,11 @@ export const updateInvoiceByIdService = async (
         },
       });
 
+      // Update payment table if invoice number is changed
+      if (isInvoiceExist.invoice_number !== invoiceData.invoice_number) {
+        await updatePaymentColInvoiceNumberService(tx, invoice_id, invoiceData.invoice_number);
+      }
+      
       return updatedInvoice;
     });
 
