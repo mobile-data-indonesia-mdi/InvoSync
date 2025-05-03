@@ -240,19 +240,20 @@ export const updateInvoiceByIdService = async (
 // };
 
 // Payments Services -> Invoice Services
-export const getPaymentStatusService = async (invoice_id: string) => {
+export const getInvoiceByInvoiceNumberService = async (invoiceNumber: string) => {
   try {
     const invoice = await prisma.invoice.findUnique({
       where: {
-        invoice_id,
+        invoice_number: invoiceNumber,
       },
       select: {
+        invoice_id: true,
         payment_status: true,
       },
     });
 
     if (!invoice) {
-      throw new Error('Invoice tidak ditemukan');
+      throw new HttpError(`Invoice with ${invoiceNumber} not found`, 404);
     }
 
     return invoice;
@@ -302,7 +303,7 @@ export const updateInvoiceColAmountPaidService = async (
 };
 
 // Helper to update payment status in invoice
-export const updateInvoicePaymentStatusService = async (
+const _updateInvoiceColPaymentStatusService = async (
   tx: Prisma.TransactionClient,
   invoiceId: string,
 ) => {
