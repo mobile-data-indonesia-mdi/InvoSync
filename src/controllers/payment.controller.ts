@@ -23,7 +23,7 @@ export const createPaymentController = async (req: Request, res: Response): Prom
     }
 
     if (!req.body.proof_of_transfer && req.file) {
-      req.body.proof_of_transfer = `payment/upload/${req.file.filename}`;
+      req.body.proof_of_transfer = `payments/upload/${req.file.filename}`;
     }
 
     const validate = await paymentRequestSchema.safeParseAsync(req.body);
@@ -35,6 +35,7 @@ export const createPaymentController = async (req: Request, res: Response): Prom
     }
 
     const payment = await createPaymentService(validate.data, req.file!);
+    req.body.proof_of_transfer = payment.proof_of_transfer;
 
     await log(req, 'SUCCESS', 'Create Payment - Data successfully created');
     return responseHelper(res, 'success', 201, 'Data successfully created', payment);
@@ -133,7 +134,8 @@ export const editPaymentController = async (req: Request, res: Response) => {
       return responseHelper(res, 'error', 400, 'Invalid parameters', parsed);
     }
 
-    const payment = await editPaymentService(paymentId, validate.data, req.file);
+    const payment = await editPaymentService(paymentId, validate.data, req.file ?? null);
+    req.body.proof_of_transfer = payment.proof_of_transfer;
 
     await log(req, 'SUCCESS', 'Edit Payment - Data successfully updated');
     return responseHelper(res, 'success', 201, 'Data successfully updated', payment);
