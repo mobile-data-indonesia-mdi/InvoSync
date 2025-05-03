@@ -266,22 +266,39 @@ export const getPaymentStatusService = async (invoice_id: string) => {
 };
 
 // Helper to update amount paid in invoice
-export const updateInvoiceAmountPaidService = async (
+export const updateInvoiceColAmountPaidService = async (
   tx: Prisma.TransactionClient,
   invoiceId: string,
 ) => {
-  const payments = await tx.payment.findMany({
-    where: { invoice_id: invoiceId, voided_at: null },
-    select: { amount_paid: true },
-  });
-  const totalPaid = payments.reduce((sum, p) => sum + (p.amount_paid ?? 0), 0);
+  try {
+    const invoice = await tx.invoice.findUnique({
+      where: { invoice_id: invoiceId },
+      select: { amount_paid: true },
+    });
 
-  await tx.invoice.update({
-    where: { invoice_id: invoiceId },
-    data: { amount_paid: totalPaid },
-  });
+    if (!invoice) {
+      throw new HttpError('Invoice not found', 404);
+    }
 
-  await updateInvoicePaymentStatusService(tx, invoiceId);
+    const payments = await tx.payment.findMany({
+      where: { invoice_id: invoiceId, voided_at: null },
+      select: { amount_paid: true },
+    });
+
+    const totalAmountPaid = payments.reduce((acc, payment) => acc + payment.amount_paid, 0);
+
+    await tx.invoice.update({
+      where: { invoice_id: invoiceId },
+      data: { amount_paid: totalAmountPaid },
+    });
+    await _updateInvoiceColPaymentStatusService(tx, invoiceId);
+  } catch (error) {
+    if (error instanceof HttpError) {
+      throw error;
+    }
+
+    throw new HttpError('Internal Server Error', 500);
+  }
 };
 
 // Helper to update payment status in invoice
@@ -289,34 +306,38 @@ export const updateInvoicePaymentStatusService = async (
   tx: Prisma.TransactionClient,
   invoiceId: string,
 ) => {
-  const invoice = await tx.invoice.findUnique({
-    where: { invoice_id: invoiceId },
-    select: { total: true, amount_paid: true },
-  });
+  try {
+    const invoice = await tx.invoice.findUniqueOrThrow({
+      where: { invoice_id: invoiceId },
+      select: { total: true, amount_paid: true },
+    });
 
-  if (!invoice) {
-    throw new Error('Invoice tidak ditemukan');
+    if (invoice.amount_paid > invoice.total) {
+      throw new HttpError('Overpayment detected', 409);
+    }
+
+    if (invoice.amount_paid < 0) {
+      throw new HttpError('Negative payment amount detected', 409); 
+    }
+
+    const paymentStatus =
+      invoice.amount_paid === invoice.total
+        ? 'paid'
+        : invoice.amount_paid > 0
+        ? 'partial'
+        : 'unpaid';
+
+    await tx.invoice.update({
+      where: { invoice_id: invoiceId },
+      data: { payment_status: paymentStatus },
+    });
+  } catch (error) {
+    if (error instanceof HttpError) {
+      throw error;
+    }
+
+    throw new HttpError('Internal Server Error', 500);
   }
-
-  let paymentStatus = 'unpaid';
-
-  if (invoice.amount_paid > invoice.total) {
-    throw new Error('Overpayment detected');
-  } else if (invoice.amount_paid === invoice.total) {
-    paymentStatus = 'paid';
-  } else if (invoice.amount_paid > 0) {
-    paymentStatus = 'partial';
-  } else if (invoice.amount_paid === 0) {
-    paymentStatus = 'unpaid';
-  } else {
-    // amount_paid < 0
-    throw new Error('Invalid payment status');
-  }
-
-  await tx.invoice.update({
-    where: { invoice_id: invoiceId },
-    data: { payment_status: paymentStatus },
-  });
 };
 
 export const getAllReceivableService = async () => {
