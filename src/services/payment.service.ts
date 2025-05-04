@@ -142,7 +142,6 @@ export const editPaymentService = async (
     const {
       invoice_id: currentInvoiceId,
       amount_paid: currentAmountPaid,
-      invoice_number: currentInvoiceNumber,
       voided_at: currentVoidedAt,
       proof_of_transfer: currentProofOfTransfer,
     } = existingPayment;
@@ -155,7 +154,7 @@ export const editPaymentService = async (
       ? path.join('payments/upload', _renameFile(uploadedFile, paymentId))
       : currentProofOfTransfer;
 
-    if (uploadedFile && currentProofOfTransfer && updatedProofOfTransfer !== currentProofOfTransfer) {
+    if (updatedProofOfTransfer !== currentProofOfTransfer) {
       _deleteFile(currentProofOfTransfer);
     }
 
@@ -230,11 +229,6 @@ export const deletePaymentByIdService = async (payment_id: string) => {
 export const getProofPaymentService = async (payment_filename: string) => {
   try {
     const proofOfTransferPath = path.resolve('uploads/payments', payment_filename); // example path: 'uploads/payments/12345.jpg'
-
-    if (!fs.existsSync(proofOfTransferPath)) {
-      throw new HttpError('File not found', 404);
-    }
-
     return proofOfTransferPath;
   } catch (error) {
     if (error instanceof HttpError) {
