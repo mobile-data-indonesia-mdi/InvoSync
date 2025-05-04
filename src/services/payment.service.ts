@@ -2,6 +2,7 @@ import { prisma } from '@config/db';
 import { type PaymentRequestSchema, type PaymentUpdateRequestSchema } from '@models/payment.model';
 import type { Prisma } from '@prisma/client';
 import { getInvoiceByInvoiceNumberService, updateInvoiceColAmountPaidService } from '@services/invoice.service';
+import { getClientByIdService } from './client.service';
 import fs from 'fs';
 import path from 'path';
 import HttpError from '@utils/httpError';
@@ -78,6 +79,12 @@ export const getAllPaymentService = async () => {
 
 export const getPaymentByClientService = async (client_id: string) => {
   try {
+    const client = await getClientByIdService(client_id);
+    
+    if (!client) {
+      throw new HttpError('Client not found', 404);
+    }
+
     const payment = await prisma.payment.findMany({
       where: {
         invoice: {
@@ -88,10 +95,6 @@ export const getPaymentByClientService = async (client_id: string) => {
         payment_date: 'asc',
       },
     });
-
-    if (!payment) {
-      throw new HttpError(`Payment for client not found`, 404);
-    }
 
     return payment;
   } catch (error) {
