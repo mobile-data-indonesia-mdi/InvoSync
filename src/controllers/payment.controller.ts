@@ -16,6 +16,186 @@ import path from 'path';
 import fs from 'fs';
 import HttpError from '@utils/httpError';
 
+/**
+ * @swagger
+ * components:
+ *  schemas:
+ *    Payment:
+ *      type: object
+ *      properties:
+ *        payment_id:
+ *          type: string
+ *          format: uuid
+ *          description: Identitas unik untuk pembayaran
+ *        payment_date:
+ *          type: string
+ *          format: date
+ *          description: Tanggal pembayaran
+ *        amount_paid:
+ *          type: number
+ *          format: double
+ *          description: Jumlah yang dibayarkan
+ *        proof_of_transfer:
+ *          type: string
+ *          format: binary
+ *          description: Bukti transfer pembayaran
+ *        voided_at:
+ *          type: string
+ *          format: date-time
+ *          nullable: true
+ *          description: Tanggal pembayaran dijadikan void
+ *        created_at:
+ *          type: string
+ *          format: date-time
+ *          description: Tanggal pembayaran dibuat
+ *        updated_at:
+ *          type: string
+ *          format: date-time
+ *          description: Tanggal pembayaran diperbarui
+ *        invoice_id:
+ *          type: string
+ *          format: uuid
+ *          description: Identitas unik untuk invoice yang terkait dengan pembayaran
+ *        invoice_number:
+ *          type: string
+ *          format: string
+ *          description: Nomor invoice yang terkait dengan pembayaran
+ *      example: 
+ *        payment_id: "123e4567-e89b-12d3-a456-426614174000"
+ *        payment_date: "2024-05-01"
+ *        amount_paid: 1000
+ *        proof_of_transfer: "payments/upload/123e4567-e89b-12d3-a456-426614174000.jpg"
+ *        voided_at: null
+ *        created_at: "2024-05-01T12:00:00Z"
+ *        updated_at: "2024-05-01T12:00:00Z"
+ *        invoice_id: "987e6543-e21b-12d3-a456-426614174000"
+ *        invoice_number: "INV-2024-001"
+ */
+
+/**
+ * @swagger    
+ * /payments:
+ *   post:
+ *     summary: Membuat payment baru
+ *     tags:
+ *       - Payments
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               payment_date:
+ *                 type: string
+ *                 format: date
+ *                 example: "2024-05-01"
+ *               amount_paid:
+ *                 type: number
+ *                 example: 1000
+ *               proof_of_transfer:
+ *                 type: string
+ *                 format: binary
+ *               invoice_number:
+ *                 type: string
+ *                 example: "INV-2024-001"
+ *     responses:
+ *       201:
+ *         description: Payment berhasil dibuat
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 code:
+ *                   type: integer
+ *                   example: 201
+ *                 message:
+ *                   type: string
+ *                   example: Data successfully created
+ *                 data:
+ *                   type: object
+ *                   $ref: '#/components/schemas/Payment'            
+ *       400:
+ *         description: Parameter tidak valid
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 code:
+ *                   type: integer
+ *                   example: 400
+ *                 message:
+ *                   type: string
+ *                   example: Invalid parameters
+ *                 data:
+ *                   type: object
+ *                   example: { field: "proof_of_transfer", message: "Proof of transfer is required" }
+ *       404:
+ *         description: Invoice untuk pembayaran tidak ditemukan
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 code:
+ *                   type: integer
+ *                   example: 404
+ *                 message:
+ *                   type: string
+ *                   example: Invoice with number INV-2024-001 not found
+ *                 data:
+ *                   type: "null"	
+ *       409:
+ *         description: Konflik pembayaran (contoh, invoice sudah dibayar)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 code:
+ *                   type: integer
+ *                   example: 409
+ *                 message:
+ *                   type: string
+ *                   example: Client sudah membayar semua tagihan pada invoice INV-2024-001
+ *                 data:
+ *                   type: "null"	
+ *       500:
+ *         description: Kesalahan server internal
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 code:
+ *                   type: integer
+ *                   example: 500
+ *                 message:
+ *                   type: string
+ *                   example: Internal server error
+ *                 data:
+ *                   type: "null"
+ * 
+ */
 export const createPaymentController = async (req: Request, res: Response): Promise<void> => {
   try {
     if (req.body.amount_paid && typeof req.body.amount_paid !== 'number') {
@@ -48,6 +228,55 @@ export const createPaymentController = async (req: Request, res: Response): Prom
   }
 };
 
+/**
+ * @swagger
+ * /payments:
+ *   get:
+ *     summary: Mendapatkan semua pembayaran
+ *     tags:
+ *      - Payments
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Data successfully retrieved
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 code:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: Data successfully retrieved
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Payment'  
+ *       500:
+ *         description: Kesalahan server internal
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 code:
+ *                   type: integer
+ *                   example: 500
+ *                 message:
+ *                   type: string
+ *                   example: Internal server error
+ *                 data:
+ *                   type: "null"
+ */
 export const getAllPaymentController = async (req: Request, res: Response) => {
   try {
     const payments = await getAllPaymentService();
@@ -63,6 +292,100 @@ export const getAllPaymentController = async (req: Request, res: Response) => {
   }
 };
 
+/**
+ * @swagger
+ * /payments/client/{id}:
+ *   get:
+ *     summary: Mendapatkan pembayaran berdasarkan ID klien
+ *     tags:
+ *       - Payments
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: UUID klien yang ingin diambil
+ *     responses:
+ *       200:
+ *         description: Data successfully retrieved
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 code:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: Data successfully retrieved
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Payment'
+ *       400:
+ *         description: Parameter tidak valid
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 code:
+ *                   type: integer
+ *                   example: 400
+ *                 message:
+ *                   type: string
+ *                   example: Invalid parameters
+ *                 data:
+ *                   type: object
+ *                   example: { message: "Client ID is required" }
+ *       404:
+ *         description: Klien tidak ditemukan
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 code:
+ *                   type: integer
+ *                   example: 404
+ *                 message:
+ *                   type: string
+ *                   example: Client not found
+ *                 data:
+ *                   type: "null"
+ *       500:
+ *         description: Kesalahan server internal
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 code:
+ *                   type: integer
+ *                   example: 500
+ *                 message:
+ *                   type: string
+ *                   example: Internal server error
+ *                 data:
+ *                   type: "null"
+ */
 export const getPaymentByClientController = async (req: Request, res: Response) => {
   try {
     const clientId = req.params.id;
@@ -74,10 +397,10 @@ export const getPaymentByClientController = async (req: Request, res: Response) 
       });
     }
 
-    const payment = await getPaymentByClientService(clientId);
+    const payments = await getPaymentByClientService(clientId);
 
     await log(req, 'SUCCESS', 'Get Payment By Client - Data successfully retrieved');
-    return responseHelper(res, 'success', 200, 'Data successfully retrieved', payment);
+    return responseHelper(res, 'success', 200, 'Data successfully retrieved', payments);
   } catch (error) {
     const errorMessage = error instanceof HttpError ? error.message : 'Internal server error';
     const statusCode = error instanceof HttpError ? error.statusCode : 500;
@@ -87,6 +410,99 @@ export const getPaymentByClientController = async (req: Request, res: Response) 
   }
 };
 
+/**
+ * @swagger
+ * /payments/{id}:
+ *   get:
+ *     summary: Mendapatkan pembayaran berdasarkan ID
+ *     tags:
+ *       - Payments
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: UUID pembayaran yang ingin diambil
+ *     responses:
+ *       200:
+ *         description: Pembayaran berhasil ditemukan
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 code:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: Data successfully retrieved
+ *                 data:
+ *                   $ref: '#/components/schemas/Payment'
+ *       400:
+ *         description: Parameter tidak valid
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 code:
+ *                   type: integer
+ *                   example: 400
+ *                 message:
+ *                   type: string
+ *                   example: Invalid parameters
+ *                 data:
+ *                   type: object
+ *                   example:
+ *                     message: "Payment ID is required"
+ *       404:
+ *         description: Pembayaran tidak ditemukan
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 code:
+ *                   type: integer
+ *                   example: 404
+ *                 message:
+ *                   type: string
+ *                   example: Payment not found
+ *                 data:
+ *                   type: "null"
+ *       500:
+ *         description: Kesalahan server internal
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 code:
+ *                   type: integer
+ *                   example: 500
+ *                 message:
+ *                   type: string
+ *                   example: Internal server error
+ *                 data:
+ *                   type: "null"
+ */
 export const getPaymentByIdController = async (req: Request, res: Response) => {
   try {
     const paymentId = req.params.id;
@@ -111,6 +527,146 @@ export const getPaymentByIdController = async (req: Request, res: Response) => {
   }
 };
 
+/**
+ * @swagger
+ * /payments/{id}:
+ *   put:
+ *     summary: Mengedit pembayaran berdasarkan ID
+ *     tags:
+ *       - Payments
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: UUID pembayaran yang ingin diedit
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               payment_date:
+ *                 type: string
+ *                 format: date
+ *                 nullable: true
+ *                 example: "2024-05-01"
+ *               amount_paid:
+ *                 type: number
+ *                 nullable: true
+ *                 example: 1000
+ *               proof_of_transfer:
+ *                 type: string
+ *                 nullable: true
+ *                 format: binary
+ *               invoice_number:
+ *                 type: string
+ *                 nullable: true
+ *                 example: "INV-2024-001"
+ *               voided_at:
+ *                 type: string
+ *                 format: date-time
+ *                 nullable: true
+ *                 example: null
+ * 
+ *     responses:
+ *       201:
+ *         description: Pembayaran berhasil diperbarui
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 code:
+ *                   type: integer
+ *                   example: 201
+ *                 message:
+ *                   type: string
+ *                   example: Data successfully updated
+ *                 data:
+ *                   $ref: '#/components/schemas/Payment'
+ *       400:
+ *         description: Parameter tidak valid
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 code:
+ *                   type: integer
+ *                   example: 400
+ *                 message:
+ *                   type: string
+ *                   example: Invalid parameters
+ *                 data:
+ *                   type: object
+ *                   example: { field: "amount_paid", message: "Expected number, received nan" }
+ *       404:
+ *         description: Pembayaran tidak ditemukan
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 code:
+ *                   type: integer
+ *                   example: 404
+ *                 message:
+ *                   type: string
+ *                   example: Payment not found
+ *                 data:
+ *                   type: "null"	
+ *       409:
+ *         description: Konflik pembayaran (contoh, lebih bayar dari total tagihan pada invoice)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 code:
+ *                   type: integer
+ *                   example: 409
+ *                 message:
+ *                   type: string
+ *                   example: Overpayment detected
+ *                 data:
+ *                   type: "null"	
+ *       500:
+ *         description: Kesalahan server internal
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 code:
+ *                   type: integer
+ *                   example: 500
+ *                 message:
+ *                   type: string
+ *                   example: Internal server error
+ *                 data:
+ *                   type: "null"
+ */
 export const editPaymentController = async (req: Request, res: Response) => {
   try {
     const paymentId = req.params.id;
@@ -148,6 +704,116 @@ export const editPaymentController = async (req: Request, res: Response) => {
   }
 };
 
+/**
+ * @swagger
+ * /payments/{id}:
+ *   delete:
+ *     summary: Menghapus payment berdasarkan ID
+ *     tags:
+ *       - Payments
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: UUID pembayaran yang ingin dihapus
+ *     responses:
+ *       204:
+ *         description: Payment berhasil dihapus
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 code:
+ *                   type: integer
+ *                   example: 204
+ *                 message:
+ *                   type: string
+ *                   example: Data successfully deleted
+ *                 data:
+ *                   type: "null"
+ *       400:
+ *         description: Parameter tidak valid
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 code:
+ *                   type: integer
+ *                   example: 400
+ *                 message:
+ *                   type: string
+ *                   example: Invalid parameters
+ *                 data:
+ *                   type: object
+ *                   example: { message: "Payment ID is required" }
+ *       404:
+ *         description: Payment tidak ditemukan
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 code:
+ *                   type: integer
+ *                   example: 404
+ *                 message:
+ *                   type: string
+ *                   example: Payment not found
+ *                 data:
+ *                   type: "null"	
+ *       409:
+ *         description: Konflik pembayaran (contoh, pembayaran negatif)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 code:
+ *                   type: integer
+ *                   example: 409
+ *                 message:
+ *                   type: string
+ *                   example: Negative payment amount detected
+ *                 data:
+ *                   type: "null"	
+ *       500:
+ *         description: Kesalahan server internal
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 code:
+ *                   type: integer
+ *                   example: 500
+ *                 message:
+ *                   type: string
+ *                   example: Internal server error
+ *                 data:
+ *                   type: "null"
+ */
 export const deletePaymentController = async (req: Request, res: Response) => {
   try {
     const paymentId = req.params.id;
@@ -172,6 +838,100 @@ export const deletePaymentController = async (req: Request, res: Response) => {
   }
 };
 
+/**
+ * @swagger
+ * /payments/upload/{filename}:
+ *   get:
+ *     summary: Mendapatkan bukti pembayaran berdasarkan nama file
+ *     tags:
+ *       - Payments
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: filename
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Nama file bukti pembayaran yang ingin diambil
+ *     responses:
+ *       200:
+ *         description: Bukti pembayaran berhasil ditemukan dan dikirimkan
+ *       400:
+ *         description: Parameter tidak valid
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 code:
+ *                   type: integer
+ *                   example: 400
+ *                 message:
+ *                   type: string
+ *                   example: Invalid parameters
+ *                 data:
+ *                   type: object
+ *                   example: { message: "Payment Filename is required" }
+ *       403:
+ *         description: Akses tidak diizinkan untuk file ini
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 code:
+ *                   type: integer
+ *                   example: 403
+ *                 message:
+ *                   type: string
+ *                   example: You do not have permission to access this resource
+ *                 data:
+ *                   type: "null"
+ *       404:
+ *         description: File tidak ditemukan
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 code:
+ *                   type: integer
+ *                   example: 404
+ *                 message:
+ *                   type: string
+ *                   example: Data not found
+ *                 data:
+ *                   type: object
+ *                   example: { message: "File not found" }
+ *       500:
+ *         description: Kesalahan server internal
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 code:
+ *                   type: integer
+ *                   example: 500
+ *                 message:
+ *                   type: string
+ *                   example: Internal server error
+ *                 data:
+ *                   type: "null"
+ */
 export const getProofPaymentController = async (req: Request, res: Response) => {
   try {
     const filename = req.params.filename;
