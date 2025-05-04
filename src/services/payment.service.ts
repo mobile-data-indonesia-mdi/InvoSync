@@ -307,8 +307,6 @@ const _renameFile = (file: Express.Multer.File, payment_id: string): string => {
   
   const absoluteRenamedPath = path.resolve(renamedFilePath);
   const absoluteTempPath = path.resolve(tempFilePath);
-  console.log('absoluteTempPath: ', absoluteTempPath);
-  console.log('absoluteRenamedPath: ', absoluteRenamedPath);
   fs.renameSync(absoluteTempPath, absoluteRenamedPath);
 
   if (!fs.existsSync(absoluteRenamedPath)) {
@@ -323,8 +321,6 @@ const _deleteFile = (filePath: string): void => {
     throw new HttpError('File name is undefined', 400);
   }
   const absoluteFilePath = path.resolve('uploads/payments', fileName);
-  
-  console.log('DELETE - absoluteFilePath: ', absoluteFilePath);
 
   if (fs.existsSync(absoluteFilePath)) {
     fs.unlinkSync(absoluteFilePath);
