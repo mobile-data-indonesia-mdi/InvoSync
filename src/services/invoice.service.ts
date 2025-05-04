@@ -259,7 +259,7 @@ export const getInvoiceByInvoiceNumberService = async (invoiceNumber: string) =>
     });
 
     if (!invoice) {
-      throw new HttpError(`Invoice with ${invoiceNumber} not found`, 404);
+      throw new HttpError(`Invoice with number ${invoiceNumber} not found`, 404);
     }
 
     return invoice;
