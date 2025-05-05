@@ -1,7 +1,8 @@
 import { prisma } from '@config/db';
 import { type PaymentRequestSchema, type PaymentUpdateRequestSchema } from '@models/payment.model';
 import type { Prisma } from '@prisma/client';
-import { getPaymentStatusService, updateInvoiceAmountPaidService } from '@services/invoice.service';
+import { getInvoiceByInvoiceNumberService, updateInvoiceColAmountPaidService } from '@services/invoice.service';
+import { getClientByIdService } from './client.service';
 import fs from 'fs';
 import path from 'path';
 import HttpError from '@utils/httpError';
@@ -11,12 +12,16 @@ export const createPaymentService = async (
   file: Express.Multer.File | undefined,
 ) => {
   try {
-    const invoiceData = await getPaymentStatusService(paymentData.invoice_id);
+    const invoiceData = await getInvoiceByInvoiceNumberService(paymentData.invoice_number);
     if (invoiceData.payment_status === 'paid') {
       throw new HttpError(
-        'Client sudah membayar semua tagihan pada invoice ${paymentData.invoice_id}',
+        `Client sudah membayar semua tagihan pada invoice ${paymentData.invoice_number}`,
         409,
       );
+    }
+
+    if (!file) {
+      throw new HttpError('File proof of transfer is required', 400);
     }
 
     const createdPayment = await prisma.$transaction(async tx => {
@@ -27,38 +32,30 @@ export const createPaymentService = async (
           amount_paid: paymentData.amount_paid,
           proof_of_transfer: paymentData.proof_of_transfer,
           voided_at: paymentData.voided_at,
-          invoice_id: paymentData.invoice_id,
+          invoice_id: invoiceData.invoice_id,
+          invoice_number: paymentData.invoice_number,
         },
       });
 
       // Update invoice amount paid and payment status
-      await updateInvoiceAmountPaidService(tx, paymentData.invoice_id);
+      await updateInvoiceColAmountPaidService(tx, invoiceData.invoice_id);
 
       return payment;
     });
-
-    // Ganti nama file dengan payment_id
-    if (file && createdPayment.payment_id) {
-      const oldPath = file.path;
-      const extension = file.mimetype.split('/')[1]; // Ambil ekstensi file
-      const newFilename = `${createdPayment.payment_id}.${extension}`;
-      const newPath = path.join(path.dirname(oldPath), newFilename);
-
-      // Rename file untuk menggunakan payment_id
-      fs.rename(oldPath, newPath, (err: NodeJS.ErrnoException | null) => {
-        if (err) {
-          console.error('Error renaming file:', err);
-        }
-      });
-
-      const urlPath = path.join('payment/upload', newFilename); // Path untuk disimpan di database
-      await updatePaymentProofOfTransferService(createdPayment.payment_id, urlPath); // Update path file di database
+    
+    if (createdPayment.payment_id) {
+      const urlPath = path.join('payments/upload', _renameFile(file, createdPayment.payment_id));
+      await _updateProofOfTransferService(createdPayment.payment_id, urlPath); // Update path file di database
     }
+    
 
     return await getPaymentByIdService(createdPayment.payment_id);
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
-    throw new Error(errorMessage);
+    if (error instanceof HttpError) {
+      throw error;
+    }
+
+    throw new HttpError('Internal Server Error', 500);
   }
 };
 
@@ -72,29 +69,40 @@ export const getAllPaymentService = async () => {
 
     return payment;
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
-    throw new Error(errorMessage);
+    if (error instanceof HttpError) {
+      throw error;
+    }
+
+    throw new HttpError('Internal Server Error', 500);
   }
 };
 
 export const getPaymentByClientService = async (client_id: string) => {
   try {
+    const client = await getClientByIdService(client_id);
+    
+    if (!client) {
+      throw new HttpError('Client not found', 404);
+    }
+
     const payment = await prisma.payment.findMany({
       where: {
         invoice: {
           client_id,
         },
       },
+      orderBy: {
+        payment_date: 'asc',
+      },
     });
-
-    if (!payment) {
-      throw new Error(`Payment untuk client tidak ditemukan`);
-    }
 
     return payment;
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
-    throw new Error(errorMessage);
+    if (error instanceof HttpError) {
+      throw error;
+    }
+
+    throw new HttpError('Internal Server Error', 500);
   }
 };
 
@@ -107,20 +115,23 @@ export const getPaymentByIdService = async (payment_id: string) => {
     });
 
     if (!payment) {
-      throw new Error(`Payment tidak ditemukan`);
+      throw new HttpError(`Payment not found`, 404);
     }
 
     return payment;
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
-    throw new Error(errorMessage);
+    if (error instanceof HttpError) {
+      throw error;
+    }
+
+    throw new HttpError('Internal Server Error', 500);
   }
 };
 
 export const editPaymentService = async (
   paymentId: string,
   updatedPaymentData: PaymentUpdateRequestSchema,
-  uploadedFile: Express.Multer.File | undefined,
+  uploadedFile: Express.Multer.File | null,
 ) => {
   try {
     const existingPayment = await prisma.payment.findUnique({
@@ -128,75 +139,54 @@ export const editPaymentService = async (
     });
 
     if (!existingPayment) {
-      throw new Error('Payment tidak ditemukan');
+      throw new HttpError('Payment not found', 404);
     }
 
     const {
-      amount_paid: currentAmountPaid,
       invoice_id: currentInvoiceId,
+      amount_paid: currentAmountPaid,
       voided_at: currentVoidedAt,
       proof_of_transfer: currentProofOfTransfer,
     } = existingPayment;
 
-    const newAmountPaid = updatedPaymentData.amount_paid ?? currentAmountPaid;
-    const newInvoiceId = updatedPaymentData.invoice_id ?? currentInvoiceId;
-    const newVoidedAt = updatedPaymentData.hasOwnProperty('voided_at')
-      ? updatedPaymentData.voided_at
-      : currentVoidedAt;
+    const newInvoiceId = updatedPaymentData.invoice_number
+      ? (await getInvoiceByInvoiceNumberService(updatedPaymentData.invoice_number)).invoice_id
+      : currentInvoiceId;
 
-    const hasVoidStatusChanged = currentVoidedAt !== newVoidedAt;
-    const hasInvoiceIdChanged = currentInvoiceId !== newInvoiceId;
-    const hasAmountPaidChanged = currentAmountPaid !== newAmountPaid;
+    const updatedProofOfTransfer = uploadedFile
+      ? path.join('payments/upload', _renameFile(uploadedFile, paymentId))
+      : currentProofOfTransfer;
 
-    let newProofOfTransferPath: string | undefined = currentProofOfTransfer;
-
-    if (uploadedFile) {
-      const tempFilePath = uploadedFile.path;
-      const fileExtension = uploadedFile.mimetype.split('/')[1];
-      const renamedFileName = `${paymentId}.${fileExtension}`;
-      const renamedFilePath = path.join(path.dirname(tempFilePath), renamedFileName);
-      fs.renameSync(tempFilePath, renamedFilePath);
-
-      newProofOfTransferPath = path.join('payment/upload', renamedFileName);
-      updatedPaymentData.proof_of_transfer = newProofOfTransferPath;
+    if (updatedProofOfTransfer !== currentProofOfTransfer) {
+      _deleteFile(currentProofOfTransfer);
     }
 
     const updatedPayment = await prisma.$transaction(async transaction => {
-      const updatePayload: Prisma.PaymentUpdateInput = { ...updatedPaymentData };
+      const updatePayload = {
+        ...updatedPaymentData,
+        invoice_id: newInvoiceId,
+        proof_of_transfer: updatedProofOfTransfer,
+      };
 
-      if (hasAmountPaidChanged || hasInvoiceIdChanged || hasVoidStatusChanged) {
-        await transaction.payment.update({ where: { payment_id: paymentId }, data: updatePayload });
+      const updatedPaymentRecord = await transaction.payment.update({ where: { payment_id: paymentId }, data: updatePayload });
 
-        if (hasInvoiceIdChanged) {
-          await updateInvoiceAmountPaidService(transaction, currentInvoiceId);
-          await updateInvoiceAmountPaidService(transaction, newInvoiceId);
-        } else {
-          await updateInvoiceAmountPaidService(transaction, currentInvoiceId);
-        }
-      } else {
-        await transaction.payment.update({ where: { payment_id: paymentId }, data: updatePayload });
+      if (currentInvoiceId !== newInvoiceId) {
+        await updateInvoiceColAmountPaidService(transaction, currentInvoiceId);
+        await updateInvoiceColAmountPaidService(transaction, newInvoiceId);
+      } else if (currentAmountPaid !== updatedPaymentData.amount_paid || currentVoidedAt !== updatedPaymentData.voided_at) {
+        await updateInvoiceColAmountPaidService(transaction, currentInvoiceId);
       }
 
-      return transaction.payment.findUnique({ where: { payment_id: paymentId } });
+      return updatedPaymentRecord;
     });
-
-    if (currentProofOfTransfer && newProofOfTransferPath !== currentProofOfTransfer) {
-      const currentFileName = currentProofOfTransfer.split('\\').pop();
-      const currentFilePath = currentFileName ? await getProofPaymentService(currentFileName) : '';
-      const newFileName = newProofOfTransferPath.split('\\').pop();
-      const newFilePath = newFileName ? await getProofPaymentService(newFileName) : '';
-
-      if (newFilePath && currentFilePath !== newFilePath) {
-        console.log('Menghapus file lama:', currentFilePath);
-        const resolvedCurrentFilePath = path.resolve(currentFilePath);
-        fs.unlinkSync(resolvedCurrentFilePath);
-      }
-    }
 
     return updatedPayment;
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
-    throw new Error(errorMessage);
+    if (error instanceof HttpError) {
+      throw error;
+    }
+
+    throw new HttpError('Internal Server Error', 500);
   }
 };
 
@@ -209,7 +199,7 @@ export const deletePaymentByIdService = async (payment_id: string) => {
     });
 
     if (!payment) {
-      throw new Error('Payment tidak ditemukan');
+      throw new HttpError('Payment not found', 404);
     }
 
     const invoiceID = payment.invoice_id;
@@ -220,42 +210,35 @@ export const deletePaymentByIdService = async (payment_id: string) => {
       const deleted = await tx.payment.delete({
         where: { payment_id },
       });
-      await updateInvoiceAmountPaidService(tx, invoiceID);
+      await updateInvoiceColAmountPaidService(tx, invoiceID);
 
       return deleted;
     });
 
-    // Menghapus file proof_of_transfer
     if (proofOfTransferPath) {
-      const filePath = path.resolve(proofOfTransferPath);
-      if (fs.existsSync(filePath)) {
-        fs.unlink(filePath, err => {
-          if (err) {
-            console.error('Error deleting file:', err);
-          } else {
-            console.log(`File deleted: ${filePath}`);
-          }
-        });
-      } else {
-        console.warn(`File not found at: ${filePath}`);
-      }
+      _deleteFile(proofOfTransferPath);
     }
 
     return deletedPayment;
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
-    throw new Error(errorMessage);
+    if (error instanceof HttpError) {
+      throw error;
+    }
+
+    throw new HttpError('Internal Server Error', 500);
   }
 };
 
 export const getProofPaymentService = async (payment_filename: string) => {
   try {
     const proofOfTransferPath = path.resolve('uploads/payments', payment_filename); // example path: 'uploads/payments/12345.jpg'
-
     return proofOfTransferPath;
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
-    throw new Error(errorMessage);
+    if (error instanceof HttpError) {
+      throw error;
+    }
+
+    throw new HttpError('Internal Server Error', 500);
   }
 };
 
@@ -268,7 +251,7 @@ export const restorePaymentService = async (payment_id: string) => {
     });
 
     if (!payment) {
-      throw new Error('Payment tidak ditemukan');
+      throw new HttpError('Payment not found', 404);
     }
 
     const invoiceID = payment.invoice_id;
@@ -280,24 +263,85 @@ export const restorePaymentService = async (payment_id: string) => {
           voided_at: null,
         },
       });
-      updateInvoiceAmountPaidService(tx, invoiceID);
+      updateInvoiceColAmountPaidService(tx, invoiceID);
       return restore;
     });
 
     return restorePayment;
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
-    throw new Error(errorMessage);
+    if (error instanceof HttpError) {
+      throw error;
+    }
+
+    throw new HttpError('Internal Server Error', 500);
   }
 };
 
 // Update proof_of_transfer di database
-export const updatePaymentProofOfTransferService = async (
+const _updateProofOfTransferService = async (
   payment_id: string,
   urlPath: string,
 ): Promise<void> => {
-  await prisma.payment.update({
-    where: { payment_id },
-    data: { proof_of_transfer: urlPath },
-  });
+  try {
+    await prisma.payment.update({
+      where: { payment_id },
+      data: { proof_of_transfer: urlPath },
+    });
+  } catch (error) {
+    if (error instanceof HttpError) {
+      throw error;
+    }
+
+    throw new HttpError('Internal Server Error', 500);
+  }
 };
+
+const _renameFile = (file: Express.Multer.File, payment_id: string): string => { //Untuk rename saja
+  const tempFilePath = file.path;
+  const fileExtension = file.mimetype.split('/')[1];
+  const renamedFileName = `${payment_id}.${fileExtension}`;
+  const renamedFilePath = path.join(path.dirname(tempFilePath), renamedFileName);
+  
+  const absoluteRenamedPath = path.resolve(renamedFilePath);
+  const absoluteTempPath = path.resolve(tempFilePath);
+  fs.renameSync(absoluteTempPath, absoluteRenamedPath);
+
+  if (!fs.existsSync(absoluteRenamedPath)) {
+    throw new HttpError('Error renaming file', 500);
+  } 
+  return renamedFileName;
+};
+
+const _deleteFile = (filePath: string): void => {
+  const fileName = filePath.split('\\').pop(); // Get the file name from the path
+  if (!fileName) {
+    throw new HttpError('File name is undefined', 400);
+  }
+  const absoluteFilePath = path.resolve('uploads/payments', fileName);
+
+  if (fs.existsSync(absoluteFilePath)) {
+    fs.unlinkSync(absoluteFilePath);
+  } else {
+    throw new HttpError('File not found', 404);
+  }
+}
+
+// Invoice service -> Payment service
+export const updatePaymentColInvoiceNumberService = async (
+  tx: Prisma.TransactionClient,
+  invoice_id: string,
+  invoice_number: string,
+) => {
+  try {
+    await prisma.payment.updateMany({
+      where: { invoice_id },
+      data: { invoice_number },
+    });
+  } catch (error) {
+    if (error instanceof HttpError) {
+      throw error;
+    }
+
+    throw new HttpError('Internal Server Error', 500);
+  }
+}

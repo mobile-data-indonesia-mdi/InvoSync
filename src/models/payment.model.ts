@@ -11,6 +11,7 @@ export const paymentSchema = z.object({
     .nullable()
     .optional(),
   invoice_id: z.string().uuid(),
+  invoice_number: z.string(),
   createdAt: z.date(),
   updatedAt: z.date(),
 });
@@ -20,10 +21,12 @@ export const paymentRequestSchema = paymentSchema.pick({
   amount_paid: true,
   proof_of_transfer: true,
   voided_at: true,
-  invoice_id: true,
+  invoice_number: true,
 });
 
-export const paymentUpdateRequestSchema = paymentRequestSchema.partial();
+export const paymentUpdateRequestSchema = paymentRequestSchema
+  .extend({ invoice_id: paymentSchema.shape.invoice_id })
+  .partial();
 
 export type PaymentRequestSchema = z.infer<typeof paymentRequestSchema>;
 export type PaymentUpdateRequestSchema = z.infer<typeof paymentUpdateRequestSchema>;
