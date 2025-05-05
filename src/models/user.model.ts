@@ -19,7 +19,7 @@ export const userSchema = z.object({
     .max(100, { message: 'Password maksimal 100 karakter' }),
 
   role: z.enum(['management', 'finance'], {
-    errorMap: () => ({ message: 'Role harus salah satu dari: management, finance, it, admin' }),
+    errorMap: () => ({ message: 'Role harus salah satu dari: management, finance, it' }),
   }),
   created_at: z.date(),
   updated_at: z.date(),
