@@ -79,7 +79,7 @@ export const createInvoiceService = async (invoiceData: InvoiceWithDetailsReques
     throw new HttpError('Internal Server Error', 500);
   }
 };
-  
+
 export const getAllInvoiceService = async () => {
   try {
     const invoices = await prisma.invoice.findMany({
@@ -207,7 +207,7 @@ export const updateInvoiceByIdService = async (
       if (isInvoiceExist.invoice_number !== invoiceData.invoice_number) {
         await updatePaymentColInvoiceNumberService(tx, invoice_id, invoiceData.invoice_number);
       }
-      
+
       return updatedInvoice;
     });
 
@@ -324,15 +324,15 @@ const _updateInvoiceColPaymentStatusService = async (
     }
 
     if (invoice.amount_paid < 0) {
-      throw new HttpError('Negative payment amount detected', 409); 
+      throw new HttpError('Negative payment amount detected', 409);
     }
 
     const paymentStatus =
       invoice.amount_paid === invoice.total
         ? 'paid'
         : invoice.amount_paid > 0
-        ? 'partial'
-        : 'unpaid';
+          ? 'partial'
+          : 'unpaid';
 
     await tx.invoice.update({
       where: { invoice_id: invoiceId },
