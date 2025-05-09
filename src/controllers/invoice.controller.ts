@@ -9,6 +9,7 @@ import {
   createInvoiceService,
   getInvoiceByIdService,
   updateInvoiceByIdService,
+  toggleInvoiceVoidStatusService,
 } from '@services/invoice.service';
 import responseHelper from '@utils/responseHelper';
 import parseZodError from '@utils/parseZodError';
@@ -701,6 +702,30 @@ export const updateInvoiceByIdController = async (req: Request, res: Response): 
 
     const invoice = await updateInvoiceByIdService(invoiceId, validate.data);
     await log(req, 'SUCCESS', `Invoice with ID: ${invoiceId} successfully updated`);
+    return responseHelper(res, 'success', 200, 'Data successfully updated', invoice);
+  } catch (error) {
+    const errorMessage = error instanceof HttpError ? error.message : 'Internal server error';
+    const statusCode = error instanceof HttpError ? error.statusCode : 500;
+
+    await log(req, 'ERROR', errorMessage);
+    responseHelper(res, 'error', statusCode, errorMessage, null);
+    return;
+  }
+};
+
+export const toggleInvoiceVoidStatusController = async ( req: Request, res: Response): Promise<void> => {
+  try {
+    const invoiceId = req.params.id;
+
+    if (!invoiceId) {
+      await log(req, 'ERROR', 'Invoice ID is missing for void status toggle');
+      return responseHelper(res, 'error', 400, 'Invalid parameters', {
+        message: 'Invoice ID is required',
+      });
+    }
+
+    const invoice = await toggleInvoiceVoidStatusService(invoiceId);
+    await log(req, 'SUCCESS', `Invoice with ID: ${invoiceId} void status toggled`);
     return responseHelper(res, 'success', 200, 'Data successfully updated', invoice);
   } catch (error) {
     const errorMessage = error instanceof HttpError ? error.message : 'Internal server error';

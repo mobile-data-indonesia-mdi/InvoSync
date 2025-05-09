@@ -231,19 +231,20 @@ export const loginController = async (req: Request, res: Response): Promise<void
     }
 
     const { accessToken, refreshToken } = await loginService(validate.data);
+    const isProduction = process.env.NODE_ENV === 'production'; // Check if the environment is production
 
     res.cookie('accessToken', accessToken, {
       httpOnly: true,
-      secure: true,
+      secure: isProduction,
       maxAge: ms(env.JWT_SECRET_ACCESS_LIFETIME as ms.StringValue),
-      sameSite: 'none',
+      sameSite: isProduction ? 'none' : 'lax',
     });
 
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
-      secure: true,
+      secure: isProduction,
       maxAge: ms(env.JWT_SECRET_REFRESH_LIFETIME as ms.StringValue),
-      sameSite: 'none',
+      sameSite: isProduction ? 'none' : 'lax',
     });
 
     await log(req, 'SUCCESS', 'Successfully logged in');

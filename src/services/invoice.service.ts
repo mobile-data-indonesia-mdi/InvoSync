@@ -35,8 +35,9 @@ export const createInvoiceService = async (invoiceData: InvoiceWithDetailsReques
       amount: detail.delivery_count * detail.price_per_delivery,
     }));
 
+    const taxRate = invoiceData.tax_rate / 100;
     const subTotal = invoiceDetailsWithAmount.reduce((acc, detail) => acc + detail.amount, 0);
-    const taxAmount = subTotal * invoiceData.tax_rate;
+    const taxAmount = subTotal * taxRate;
     const total = subTotal + taxAmount;
 
     const amountPaid = 0;
@@ -49,7 +50,7 @@ export const createInvoiceService = async (invoiceData: InvoiceWithDetailsReques
           issue_date: invoiceData.issue_date,
           due_date: invoiceData.due_date,
           sub_total: subTotal,
-          tax_rate: invoiceData.tax_rate,
+          tax_rate: taxRate,
           tax_amount: taxAmount,
           total,
           tax_invoice_number: invoiceData.tax_invoice_number,
@@ -88,6 +89,7 @@ export const getAllInvoiceService = async () => {
         invoice_details: true,
       },
     });
+    
     return invoices;
   } catch (error) {
     if (error instanceof HttpError) {
@@ -189,6 +191,11 @@ export const updateInvoiceByIdService = async (
         await tx.invoiceDetail.delete({ where: { invoice_detail_id: detail.invoice_detail_id } });
       }
 
+      const taxRate = invoiceData.tax_rate / 100;
+      const subTotal = existingDetails.reduce((acc, detail) => acc + detail.amount, 0);
+      const taxAmount = subTotal * taxRate;
+      const totalAmount = subTotal + taxAmount;
+
       // Update main invoice
       const updatedInvoice = await tx.invoice.update({
         where: { invoice_id },
@@ -196,12 +203,17 @@ export const updateInvoiceByIdService = async (
           invoice_number: invoiceData.invoice_number,
           issue_date: invoiceData.issue_date,
           due_date: invoiceData.due_date,
-          tax_rate: invoiceData.tax_rate,
+          tax_rate: taxRate,
+          tax_amount: taxAmount,
+          sub_total: subTotal,
+          total: totalAmount,
           tax_invoice_number: invoiceData.tax_invoice_number,
           voided_at: invoiceData.voided_at,
           client_id: invoiceData.client_id,
         },
       });
+
+      await _updateInvoiceColPaymentStatusService(tx, invoice_id);
 
       // Update payment table if invoice number is changed
       if (isInvoiceExist.invoice_number !== invoiceData.invoice_number) {
@@ -244,6 +256,34 @@ export const updateInvoiceByIdService = async (
 //     throw new HttpError('Internal Server Error', 500);
 //   }
 // };
+
+export const toggleInvoiceVoidStatusService = async (invoice_id: string) => {
+  try {
+    const invoice = await prisma.invoice.findUnique({
+      where: { invoice_id },
+    });
+
+    if (!invoice) {
+      throw new HttpError('Invoice not found', 404);
+    }
+
+    const updatedInvoice = await prisma.invoice.update({
+      where: { invoice_id },
+      data: {
+        voided_at: invoice.voided_at ? null : new Date(),
+      },
+    });
+
+    return updatedInvoice;
+  }
+  catch (error) {
+    if (error instanceof HttpError) {
+      throw error;
+    }
+
+    throw new HttpError('Internal Server Error', 500);
+  }
+};
 
 // Payments Services -> Invoice Services
 export const getInvoiceByInvoiceNumberService = async (invoiceNumber: string) => {

@@ -2,12 +2,13 @@ import type { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { prisma } from '@config/db';
 import env from '@config/env';
+import {responseHelper} from '@utils/responseHelper';
 
 export const authGuard = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   const accessToken = req.cookies['accessToken'];
 
   if (!accessToken) {
-    res.status(401).json({ message: 'unauthorize' });
+    responseHelper(res, 'error', 401, 'Unauthorized', null);
     return;
   }
 
@@ -29,14 +30,14 @@ export const authGuard = async (req: Request, res: Response, next: NextFunction)
     });
 
     if (!validate) {
-      res.status(401).json({ message: 'unauthorize' });
+      responseHelper(res, 'error', 401, 'Unauthorized', null);
       return;
     }
 
     req.user = validate;
     next();
   } catch (err) {
-    res.status(401).json({ message: err });
+    responseHelper(res, 'error', 401, 'Unauthorized', { error: err });
     return;
   }
 };
