@@ -87,7 +87,14 @@ export const getPaymentByIdService = async (payment_id: string) => {
   try {
     const payment = await prisma.payment.findUnique({
       where: {
-        payment_id,
+      payment_id,
+      },
+      include: {
+        invoice: {
+            include: {
+            client: true,
+          },
+        },
       },
     });
 
@@ -101,6 +108,7 @@ export const getPaymentByIdService = async (payment_id: string) => {
       throw error;
     }
 
+    console.error("Error Payment: ", error);
     throw new HttpError('Internal Server Error', 500);
   }
 };
@@ -167,84 +175,10 @@ export const editPaymentService = async (
   }
 };
 
-export const deletePaymentByIdService = async (payment_id: string) => {
-  try {
-    const payment = await prisma.payment.findUnique({
-      where: {
-        payment_id,
-      },
-    });
-
-    if (!payment) {
-      throw new HttpError('Payment not found', 404);
-    }
-
-    const invoiceID = payment.invoice_id;
-    const proofOfTransferPath = payment.proof_of_transfer;
-
-    // Hapus payment dari database
-    const deletedPayment = await prisma.$transaction(async tx => {
-      const deleted = await tx.payment.delete({
-        where: { payment_id },
-      });
-      await updateInvoiceColAmountPaidService(tx, invoiceID);
-
-      return deleted;
-    });
-
-    if (proofOfTransferPath) {
-      _deleteFile(proofOfTransferPath);
-    }
-
-    return deletedPayment;
-  } catch (error) {
-    if (error instanceof HttpError) {
-      throw error;
-    }
-
-    throw new HttpError('Internal Server Error', 500);
-  }
-};
-
 export const getProofPaymentService = async (payment_filename: string) => {
   try {
     const proofOfTransferPath = path.resolve('uploads/payments', payment_filename); // example path: 'uploads/payments/12345.jpg'
     return proofOfTransferPath;
-  } catch (error) {
-    if (error instanceof HttpError) {
-      throw error;
-    }
-
-    throw new HttpError('Internal Server Error', 500);
-  }
-};
-
-export const restorePaymentService = async (payment_id: string) => {
-  try {
-    const payment = await prisma.payment.findUnique({
-      where: {
-        payment_id,
-      },
-    });
-
-    if (!payment) {
-      throw new HttpError('Payment not found', 404);
-    }
-
-    const invoiceID = payment.invoice_id;
-
-    const restorePayment = await prisma.$transaction(async tx => {
-      const restore = await prisma.payment.update({
-        where: { payment_id },
-        data: {
-          voided_at: null,
-        },
-      });
-      updateInvoiceColAmountPaidService(tx, invoiceID);
-      return restore;
-    });
-
-    return restorePayment;
   } catch (error) {
     if (error instanceof HttpError) {
       throw error;
@@ -265,6 +199,43 @@ const _updateProofOfTransferService = async (
       data: { proof_of_transfer: urlPath },
     });
   } catch (error) {
+    if (error instanceof HttpError) {
+      throw error;
+    }
+
+    throw new HttpError('Internal Server Error', 500);
+  }
+};
+
+export const togglePaymentVoidStatusService = async (payment_id: string) => {
+  try {
+    const payment = await prisma.payment.findUnique({
+      where: { payment_id },
+    });
+
+    if (!payment) {
+      throw new HttpError('Payment not found', 404);
+    }
+
+    const updatedPayment = await prisma.$transaction(async transaction => {
+      const updatedPaymentRecord = await transaction.payment.update({
+        where: { payment_id },
+        data: {
+          voided_at: payment.voided_at ? null : new Date(),
+        },
+      });
+
+      // Update invoice amount paid if voiding the payment
+      if (!payment.voided_at) {
+        await updateInvoiceColAmountPaidService(transaction, payment.invoice_id);
+      }
+
+      return updatedPaymentRecord;
+    });
+
+    return updatedPayment;
+  }
+  catch (error) {
     if (error instanceof HttpError) {
       throw error;
     }
@@ -343,6 +314,7 @@ const _deleteFile = (filePath: string): void => {
 }
 
 // Invoice service -> Payment service
+// Update invoice_number pada payment berdasarkan invoice_id
 export const updatePaymentColInvoiceNumberService = async (
   tx: Prisma.TransactionClient,
   invoice_id: string,
