@@ -191,8 +191,12 @@ export const updateInvoiceByIdService = async (
         await tx.invoiceDetail.delete({ where: { invoice_detail_id: detail.invoice_detail_id } });
       }
 
+      // Recalculate totals
+      const updatedDetails = await tx.invoiceDetail.findMany({
+        where: { invoice_id },
+      });
       const taxRate = invoiceData.tax_rate / 100;
-      const subTotal = existingDetails.reduce((acc, detail) => acc + detail.amount, 0);
+      const subTotal = updatedDetails.reduce((acc, detail) => acc + detail.amount, 0);
       const taxAmount = subTotal * taxRate;
       const totalAmount = subTotal + taxAmount;
 
