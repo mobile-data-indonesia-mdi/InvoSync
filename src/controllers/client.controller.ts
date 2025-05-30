@@ -354,7 +354,7 @@ export const getAllClientController = async (req: Request, res: Response): Promi
  *                   example: 404
  *                 message:
  *                   type: string
- *                   example: No client found for ID: 123e4567-e89b-12d3-a456-426614174000
+ *                   example: "No client found for ID: 123e4567-e89b-12d3-a456-426614174000"
  *                 data:
  *                   type: "null"
  *       500:

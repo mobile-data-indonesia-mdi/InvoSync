@@ -367,7 +367,7 @@ export const getAllPaymentController = async (req: Request, res: Response) => {
  *                   example: 404
  *                 message:
  *                   type: string
- *                   example: Payment not found for ID: 123e4567-e89b-12d3-a456-426614174000
+ *                   example: "Payment not found for ID: 123e4567-e89b-12d3-a456-426614174000"
  *                 data:
  *                   type: "null"
  *       500:
@@ -809,7 +809,7 @@ export const getProofPaymentController = async (req: Request, res: Response) => 
  *                   example: 404
  *                 message:
  *                   type: string
- *                   example: Payment not found for ID: 123e4567-e89b-12d3-a456-426614174000
+ *                   example: "Payment not found for ID: 123e4567-e89b-12d3-a456-426614174000"
  *                 data:
  *                   type: "null"
  *       500:

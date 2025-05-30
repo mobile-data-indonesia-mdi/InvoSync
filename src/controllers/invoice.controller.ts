@@ -489,7 +489,7 @@ export const getAllInvoiceController = async (req: Request, res: Response): Prom
  *                   example: 404
  *                 message:
  *                   type: string
- *                   example: Invoice not found for ID: 123e4567-e89b-12d3-a456-426614174000
+ *                   example: "Invoice not found for ID: 123e4567-e89b-12d3-a456-426614174000"
  *       500:
  *         description: Internal server error
  *         content:
