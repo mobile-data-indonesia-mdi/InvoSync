@@ -5,6 +5,7 @@ import {
   getPaymentByIdController,
   editPaymentController,
   getProofPaymentController,
+  togglePaymentVoidStatusController,
 } from '@controllers/payment.controller';
 import { upload_payment } from '@utils/multerSetup';
 import { authGuard } from '@middlewares/jwt.middleware';
@@ -36,5 +37,8 @@ router.put(
   upload_payment.single('proof_of_transfer'),
   editPaymentController,
 );
+router.patch('/:id/void-status', authGuard, roleGuard(['finance', 'management']), togglePaymentVoidStatusController);
+//router.delete('/:id', authGuard, roleGuard(['finance']), deletePaymentController);
+
 
 export default router;
