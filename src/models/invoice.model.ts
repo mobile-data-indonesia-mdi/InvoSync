@@ -43,10 +43,6 @@ export const invoiceWithDetailsUpdateSchema = invoiceRequestSchema.extend({
   }),
 });
 
-// export const invoiceUpdateVoidStatusSchema = invoiceSchema.pick({
-//   voided_at: true,
-// }).nullable();
-
 export const invoiceUpdateFromPaymentRequestSchema = invoiceSchema.pick({
   amount_paid: true,
   payment_status: true,
