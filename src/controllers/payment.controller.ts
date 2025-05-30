@@ -6,6 +6,7 @@ import {
   getPaymentByIdService,
   editPaymentService, 
   getProofPaymentService,
+  togglePaymentVoidStatusService,
 } from '@services/payment.service';
 import responseHelper from '@utils/responseHelper';
 import parseZodError from '@utils/parseZodError';
@@ -366,7 +367,7 @@ export const getAllPaymentController = async (req: Request, res: Response) => {
  *                   example: 404
  *                 message:
  *                   type: string
- *                   example: Payment not found
+ *                   example: Payment not found for ID: 123e4567-e89b-12d3-a456-426614174000
  *                 data:
  *                   type: "null"
  *       500:
@@ -400,6 +401,11 @@ export const getPaymentByIdController = async (req: Request, res: Response) => {
     }
 
     const payment = await getPaymentByIdService(paymentId);
+    if (!payment) {
+      await log(req, 'ERROR', 'Payment not found for ID: ' + paymentId);
+      responseHelper(res, 'error', 404, 'Payment not found for ID: ' + paymentId, null);
+      return;
+    }
 
     await log(req, 'SUCCESS', 'Get Payment By ID - Data successfully retrieved');
     return responseHelper(res, 'success', 200, 'Data successfully retrieved', payment);
@@ -591,140 +597,6 @@ export const editPaymentController = async (req: Request, res: Response) => {
 
 /**
  * @swagger
- * /payments/{id}:
- *   delete:
- *     summary: Menghapus payment berdasarkan ID
- *     tags:
- *       - Payments
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - name: id
- *         in: path
- *         required: true
- *         schema:
- *           type: string
- *           format: uuid
- *         description: UUID pembayaran yang ingin dihapus
- *     responses:
- *       204:
- *         description: Payment berhasil dihapus
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 code:
- *                   type: integer
- *                   example: 204
- *                 message:
- *                   type: string
- *                   example: Data successfully deleted
- *                 data:
- *                   type: "null"
- *       400:
- *         description: Parameter tidak valid
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: error
- *                 code:
- *                   type: integer
- *                   example: 400
- *                 message:
- *                   type: string
- *                   example: Invalid parameters
- *                 data:
- *                   type: object
- *                   example: { message: "Payment ID is required" }
- *       404:
- *         description: Payment tidak ditemukan
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: error
- *                 code:
- *                   type: integer
- *                   example: 404
- *                 message:
- *                   type: string
- *                   example: Payment not found
- *                 data:
- *                   type: "null"	
- *       409:
- *         description: Konflik pembayaran (contoh, pembayaran negatif)
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: error
- *                 code:
- *                   type: integer
- *                   example: 409
- *                 message:
- *                   type: string
- *                   example: Negative payment amount detected
- *                 data:
- *                   type: "null"	
- *       500:
- *         description: Kesalahan server internal
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: error
- *                 code:
- *                   type: integer
- *                   example: 500
- *                 message:
- *                   type: string
- *                   example: Internal server error
- *                 data:
- *                   type: "null"
- */
-export const deletePaymentController = async (req: Request, res: Response) => {
-  try {
-    const paymentId = req.params.id;
-
-    if (!paymentId) {
-      await log(req, 'ERROR', 'Delete Payment - Payment ID is required');
-      return responseHelper(res, 'error', 400, 'Invalid parameters', {
-        message: 'Payment ID is required',
-      });
-    }
-
-    await deletePaymentByIdService(paymentId);
-
-    await log(req, 'SUCCESS', 'Delete Payment - Data successfully deleted');
-    return responseHelper(res, 'success', 204, 'Data successfully deleted', null);
-  } catch (error) {
-    const errorMessage = error instanceof HttpError ? error.message : 'Internal server error';
-    const statusCode = error instanceof HttpError ? error.statusCode : 500;
-
-    await log(req, 'ERROR', errorMessage);
-    responseHelper(res, 'error', statusCode, errorMessage, null);
-  }
-};
-
-/**
- * @swagger
  * /payments/upload/{filename}:
  *   get:
  *     summary: Mendapatkan bukti pembayaran berdasarkan nama file
@@ -858,6 +730,127 @@ export const getProofPaymentController = async (req: Request, res: Response) => 
     });
 
     await log(req, 'SUCCESS', 'Get Proof of Payment - File successfully sent');
+  } catch (error) {
+    const errorMessage = error instanceof HttpError ? error.message : 'Internal server error';
+    const statusCode = error instanceof HttpError ? error.statusCode : 500;
+
+    await log(req, 'ERROR', errorMessage);
+    responseHelper(res, 'error', statusCode, errorMessage, null);
+  }
+};
+
+/**
+ * @swagger
+ * /payments/{id}/void-status:
+ *   patch:
+ *     summary: Mengubah status void pembayaran berdasarkan ID
+ *     tags:
+ *       - Payments
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: UUID pembayaran yang ingin diubah status void-nya
+ *     responses:
+ *       201:
+ *         description: Status void pembayaran berhasil diperbarui
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 code:
+ *                   type: integer
+ *                   example: 201
+ *                 message:
+ *                   type: string
+ *                   example: Data successfully updated
+ *                 data:
+ *                   $ref: '#/components/schemas/Payment'
+ *       400:
+ *         description: Parameter tidak valid
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 code:
+ *                   type: integer
+ *                   example: 400
+ *                 message:
+ *                   type: string
+ *                   example: Invalid parameters
+ *                 data:
+ *                   type: object
+ *                   example: { message: "Payment ID is required" }
+  *       404:
+ *         description: Pembayaran tidak ditemukan
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 code:
+ *                   type: integer
+ *                   example: 404
+ *                 message:
+ *                   type: string
+ *                   example: Payment not found for ID: 123e4567-e89b-12d3-a456-426614174000
+ *                 data:
+ *                   type: "null"
+ *       500:
+ *         description: Kesalahan server internal
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 code:
+ *                   type: integer
+ *                   example: 500
+ *                 message:
+ *                   type: string
+ *                   example: Internal server error
+ *                 data:
+ *                   type: "null"
+ */
+export const togglePaymentVoidStatusController = async (req: Request, res: Response) => {
+  try {
+    const paymentId = req.params.id;
+
+    if (!paymentId) {
+      await log(req, 'ERROR', 'Toggle Payment Void Status - Payment ID is required');
+      return responseHelper(res, 'error', 400, 'Invalid parameters', {
+        message: 'Payment ID is required',
+      });
+    }
+
+    const payment = await togglePaymentVoidStatusService(paymentId);
+    if(!payment) {
+      await log(req, 'ERROR', 'Payment not found for ID: ' + paymentId);
+      responseHelper(res, 'error', 404, 'Payment not found for ID: ' + paymentId, null);
+      return;
+    }
+
+    await log(req, 'SUCCESS', 'Toggle Payment Void Status - Data successfully updated');
+    return responseHelper(res, 'success', 201, 'Data successfully updated', payment);
   } catch (error) {
     const errorMessage = error instanceof HttpError ? error.message : 'Internal server error';
     const statusCode = error instanceof HttpError ? error.statusCode : 500;

@@ -517,6 +517,7 @@ export const getAllUserController = async (req: Request, res: Response): Promise
     return;
   }
 };
+
 /**
  * @swagger
  * /users/{id}:

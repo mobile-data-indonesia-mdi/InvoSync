@@ -213,24 +213,6 @@ export const createClientController = async (req: Request, res: Response): Promi
  *                         type: string
  *                         format: date-time
  *                         example: 2024-01-02T00:00:00.000Z
- *       404:
- *         description: Tidak ada data yang tersedia
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 code:
- *                   type: integer
- *                   example: 404
- *                 message:
- *                   type: string
- *                   example: No content to display
- *                 data:
- *                   type: "null"
  *       500:
  *         description: Kesalahan server internal
  *         content:
@@ -256,7 +238,7 @@ export const getAllClientController = async (req: Request, res: Response): Promi
 
     if (!clients || clients.length === 0) {
       await log(req, 'SUCCESS', 'No content to display');
-      responseHelper(res, 'success', 404, 'No content to display', null);
+      responseHelper(res, 'success', 200, 'No content to display', null);
       return;
     }
 
@@ -372,7 +354,7 @@ export const getAllClientController = async (req: Request, res: Response): Promi
  *                   example: 404
  *                 message:
  *                   type: string
- *                   example: No content to display
+ *                   example: No client found for ID: 123e4567-e89b-12d3-a456-426614174000
  *                 data:
  *                   type: "null"
  *       500:
@@ -407,8 +389,8 @@ export const getClientByIdController = async (req: Request, res: Response): Prom
     const client = await getClientByIdService(clientId);
 
     if (!client) {
-      await log(req, 'SUCCESS', 'No content to display');
-      responseHelper(res, 'success', 404, 'No content to display', null);
+      await log(req, 'ERROR', 'No client found for ID: ' + clientId);
+      responseHelper(res, 'error', 404, 'No client found for ID: ' + clientId, null);
       return;
     }
 

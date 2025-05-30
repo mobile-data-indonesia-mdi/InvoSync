@@ -397,6 +397,13 @@ export const createInvoiceController = async (req: Request, res: Response): Prom
 export const getAllInvoiceController = async (req: Request, res: Response): Promise<void> => {
   try {
     const invoices = await getAllInvoiceService();
+
+    if (!invoices || invoices.length === 0) {
+      await log(req, 'SUCCESS', 'No content to display');
+      responseHelper(res, 'success', 200, 'No content to display', null);
+      return;
+    }
+
     await log(req, 'SUCCESS', 'Invoices successfully retrieved');
     return responseHelper(res, 'success', 200, 'Data successfully retrieved', invoices);
   } catch (error) {
@@ -482,7 +489,7 @@ export const getAllInvoiceController = async (req: Request, res: Response): Prom
  *                   example: 404
  *                 message:
  *                   type: string
- *                   example: Invoice not found
+ *                   example: Invoice not found for ID: 123e4567-e89b-12d3-a456-426614174000
  *       500:
  *         description: Internal server error
  *         content:
@@ -514,6 +521,13 @@ export const getInvoiceByIdController = async (req: Request, res: Response): Pro
     }
 
     const invoice = await getInvoiceByIdService(invoiceId);
+
+    if (!invoice) {
+      await log(req, 'ERROR', 'Invoice not found for ID: ' + invoiceId);
+      responseHelper(res, 'error', 404, 'Invoice not found for ID: ' + invoiceId, null);
+      return;
+    }
+
     await log(req, 'SUCCESS', `Invoice with ID: ${invoiceId} successfully retrieved`);
     return responseHelper(res, 'success', 200, 'Data successfully retrieved', invoice);
   } catch (error) {
@@ -680,7 +694,6 @@ export const getInvoiceByIdController = async (req: Request, res: Response): Pro
  *                 data:
  *                   type: "null"
  */
-
 export const updateInvoiceByIdController = async (req: Request, res: Response): Promise<void> => {
   try {
     const invoiceId = req.params.id;
@@ -713,6 +726,98 @@ export const updateInvoiceByIdController = async (req: Request, res: Response): 
   }
 };
 
+/**
+ * @swagger
+ * /invoices/{id}/void-status:
+ *   patch:
+ *     summary: Toggle the void status of an invoice by ID
+ *     tags:
+ *       - Invoices
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: UUID of the invoice to toggle void status
+ *     responses:
+ *       200:
+ *         description: Invoice void status successfully toggled
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 code:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: Data successfully updated
+ *                 data:
+ *                   $ref: '#/components/schemas/Invoice'
+ *       400:
+ *         description: Invalid parameters
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 code:
+ *                   type: integer
+ *                   example: 400
+ *                 message:
+ *                   type: string
+ *                   example: Invalid parameters
+ *                 data:
+ *                   type: object
+ *                   example: { message: "Invoice ID is required" }
+ *       404:
+ *         description: Invoice not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 code:
+ *                   type: integer
+ *                   example: 404
+ *                 message:
+ *                   type: string
+ *                   example: Invoice not found
+ *                 data:
+ *                   type: "null"
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 code:
+ *                   type: integer
+ *                   example: 500
+ *                 message:
+ *                   type: string
+ *                   example: Internal server error
+ *                 data:
+ *                   type: "null"
+ */
 export const toggleInvoiceVoidStatusController = async ( req: Request, res: Response): Promise<void> => {
   try {
     const invoiceId = req.params.id;
