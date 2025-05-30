@@ -2,7 +2,6 @@ import { prisma } from '@config/db';
 import { type PaymentRequestSchema, type PaymentUpdateRequestSchema } from '@models/payment.model';
 import type { Prisma } from '@prisma/client';
 import { getInvoiceByInvoiceNumberService, updateInvoiceColAmountPaidService } from '@services/invoice.service';
-import { getClientByIdService } from './client.service';
 import fs from 'fs';
 import path from 'path';
 import HttpError from '@utils/httpError';
@@ -65,34 +64,12 @@ export const getAllPaymentService = async () => {
       orderBy: {
         payment_date: 'asc',
       },
-    });
-
-    return payment;
-  } catch (error) {
-    if (error instanceof HttpError) {
-      throw error;
-    }
-
-    throw new HttpError('Internal Server Error', 500);
-  }
-};
-
-export const getPaymentByClientService = async (client_id: string) => {
-  try {
-    const client = await getClientByIdService(client_id);
-    
-    if (!client) {
-      throw new HttpError('Client not found', 404);
-    }
-
-    const payment = await prisma.payment.findMany({
-      where: {
+      include: {
         invoice: {
-          client_id,
+            include: {
+            client: true,
+          },
         },
-      },
-      orderBy: {
-        payment_date: 'asc',
       },
     });
 
@@ -295,6 +272,45 @@ const _updateProofOfTransferService = async (
     throw new HttpError('Internal Server Error', 500);
   }
 };
+
+// export const deletePaymentByIdService = async (payment_id: string) => {
+//   try {
+//     const payment = await prisma.payment.findUnique({
+//       where: {
+//         payment_id,
+//       },
+//     });
+
+//     if (!payment) {
+//       throw new HttpError('Payment not found', 404);
+//     }
+
+//     const invoiceID = payment.invoice_id;
+//     const proofOfTransferPath = payment.proof_of_transfer;
+
+//     // Hapus payment dari database
+//     const deletedPayment = await prisma.$transaction(async tx => {
+//       const deleted = await tx.payment.delete({
+//         where: { payment_id },
+//       });
+//       await updateInvoiceColAmountPaidService(tx, invoiceID);
+
+//       return deleted;
+//     });
+
+//     if (proofOfTransferPath) {
+//       _deleteFile(proofOfTransferPath);
+//     }
+
+//     return deletedPayment;
+//   } catch (error) {
+//     if (error instanceof HttpError) {
+//       throw error;
+//     }
+
+//     throw new HttpError('Internal Server Error', 500);
+//   }
+// };
 
 const _renameFile = (file: Express.Multer.File, payment_id: string): string => { //Untuk rename saja
   const tempFilePath = file.path;

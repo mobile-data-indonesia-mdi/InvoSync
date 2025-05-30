@@ -3,10 +3,8 @@ import { paymentRequestSchema, paymentUpdateRequestSchema } from '@models/paymen
 import {
   createPaymentService,
   getAllPaymentService,
-  getPaymentByClientService,
   getPaymentByIdService,
   editPaymentService, 
-  deletePaymentByIdService,
   getProofPaymentService,
 } from '@services/payment.service';
 import responseHelper from '@utils/responseHelper';
@@ -280,126 +278,13 @@ export const createPaymentController = async (req: Request, res: Response): Prom
 export const getAllPaymentController = async (req: Request, res: Response) => {
   try {
     const payments = await getAllPaymentService();
-
-    await log(req, 'SUCCESS', 'Get All Payments - Data successfully retrieved');
-    return responseHelper(res, 'success', 200, 'Data successfully retrieved', payments);
-  } catch (error) {
-    const errorMessage = error instanceof HttpError ? error.message : 'Internal server error';
-    const statusCode = error instanceof HttpError ? error.statusCode : 500;
-
-    await log(req, 'ERROR', errorMessage);
-    responseHelper(res, 'error', statusCode, errorMessage, null);
-  }
-};
-
-/**
- * @swagger
- * /payments/client/{id}:
- *   get:
- *     summary: Mendapatkan pembayaran berdasarkan ID klien
- *     tags:
- *       - Payments
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - name: id
- *         in: path
- *         required: true
- *         schema:
- *           type: string
- *           format: uuid
- *         description: UUID klien yang ingin diambil
- *     responses:
- *       200:
- *         description: Data successfully retrieved
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 code:
- *                   type: integer
- *                   example: 200
- *                 message:
- *                   type: string
- *                   example: Data successfully retrieved
- *                 data:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/Payment'
- *       400:
- *         description: Parameter tidak valid
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: error
- *                 code:
- *                   type: integer
- *                   example: 400
- *                 message:
- *                   type: string
- *                   example: Invalid parameters
- *                 data:
- *                   type: object
- *                   example: { message: "Client ID is required" }
- *       404:
- *         description: Klien tidak ditemukan
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: error
- *                 code:
- *                   type: integer
- *                   example: 404
- *                 message:
- *                   type: string
- *                   example: Client not found
- *                 data:
- *                   type: "null"
- *       500:
- *         description: Kesalahan server internal
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: error
- *                 code:
- *                   type: integer
- *                   example: 500
- *                 message:
- *                   type: string
- *                   example: Internal server error
- *                 data:
- *                   type: "null"
- */
-export const getPaymentByClientController = async (req: Request, res: Response) => {
-  try {
-    const clientId = req.params.id;
-
-    if (!clientId) {
-      await log(req, 'ERROR', 'Get Payment By Client - Client ID is required');
-      return responseHelper(res, 'error', 400, 'Invalid parameters', {
-        message: 'Client ID is required',
-      });
+    if (!payments || payments.length === 0) {
+      await log(req, 'SUCCESS', 'No content to display');
+      responseHelper(res, 'success', 200, 'No content to display', null);
+      return;
     }
 
-    const payments = await getPaymentByClientService(clientId);
-
-    await log(req, 'SUCCESS', 'Get Payment By Client - Data successfully retrieved');
+    await log(req, 'SUCCESS', 'Get All Payments - Data successfully retrieved');
     return responseHelper(res, 'success', 200, 'Data successfully retrieved', payments);
   } catch (error) {
     const errorMessage = error instanceof HttpError ? error.message : 'Internal server error';
@@ -981,3 +866,23 @@ export const getProofPaymentController = async (req: Request, res: Response) => 
     responseHelper(res, 'error', statusCode, errorMessage, null);
   }
 };
+
+// export const deletePaymentController = async (req: Request, res: Response) => {
+//   try {
+//     const paymentId = req.params.id;
+//     if (!paymentId) {
+//       await log(req, 'ERROR', 'Delete Payment - Payment ID is required');
+//       return responseHelper(res, 'error', 400, 'Invalid parameters', {
+//         message: 'Payment ID is required',
+//       });
+//     }
+//     await deletePaymentByIdService(paymentId);
+//     await log(req, 'SUCCESS', 'Delete Payment - Data successfully deleted');
+//     return responseHelper(res, 'success', 204, 'Data successfully deleted', null);
+//   } catch (error) {
+//     const errorMessage = error instanceof HttpError ? error.message : 'Internal server error';
+//     const statusCode = error instanceof HttpError ? error.statusCode : 500;
+//     await log(req, 'ERROR', errorMessage);
+//     responseHelper(res, 'error', statusCode, errorMessage, null);
+//   }
+// };

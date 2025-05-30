@@ -3,11 +3,8 @@ import {
   createPaymentController,
   getAllPaymentController,
   getPaymentByIdController,
-  getPaymentByClientController,
   editPaymentController,
-  deletePaymentController,
   getProofPaymentController,
-  // restorePaymentController,
 } from '@controllers/payment.controller';
 import { upload_payment } from '@utils/multerSetup';
 import { authGuard } from '@middlewares/jwt.middleware';
@@ -17,12 +14,7 @@ const router = Router();
 
 router.get('/', authGuard, roleGuard(['finance', 'management']), getAllPaymentController);
 router.get('/:id', authGuard, roleGuard(['finance', 'management']), getPaymentByIdController);
-router.get(
-  '/client/:id',
-  authGuard,
-  roleGuard(['finance', 'management']),
-  getPaymentByClientController,
-);
+
 router.get(
   '/upload/:filename',
   authGuard,
@@ -44,7 +36,5 @@ router.put(
   upload_payment.single('proof_of_transfer'),
   editPaymentController,
 );
-router.delete('/:id', authGuard, roleGuard(['finance']), deletePaymentController);
-// router.patch('/:id/restore', restorePaymentController);
 
 export default router;
