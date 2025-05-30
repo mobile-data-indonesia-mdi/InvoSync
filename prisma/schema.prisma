@@ -53,7 +53,7 @@ model Invoice{
   tax_rate            Float
   tax_amount          Float
   total               Float
-  tax_invoice_number  String
+  tax_invoice_number  String    @unique
   amount_paid         Float
   payment_status      String
   voided_at           DateTime?
@@ -62,7 +62,7 @@ model Invoice{
 
   //relasi user - invoice
   client_id           String
-  client              Client @relation(fields: [client_id], references: [client_id], onDelete: Cascade, onUpdate: Cascade)
+  client              Client @relation(fields: [client_id], references: [client_id], onDelete: Cascade)
 
   //relasi invoice - invoice_detail
   invoice_details     InvoiceDetail[]
