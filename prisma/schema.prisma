@@ -13,20 +13,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// model Log {
-//   id         BigInt   @id @default(autoincrement())
-//   level      String   // "info", "warn", "error", "debug"
-//   message    String
-//   context    String?  // misalnya: "UserService.create"
-//   meta       Json?    // info tambahan dalam bentuk JSON
-//   created_at  DateTime @default(now())
-//   createdBy  String?  // bisa "system" atau user ID/email
-
-//   @@index([level])
-//   @@index([created_at])
-// }
-
-
 model User {
   user_id         String @id @default(uuid())
   username        String    @unique
@@ -36,6 +22,7 @@ model User {
   created_at      DateTime @default(now())
   updated_at      DateTime @updatedAt
 
+  @@index([user_id])
   @@map("users")
 }
 
@@ -53,6 +40,7 @@ model Client{
 
   invoices        Invoice[]
 
+  @@index([client_id])
   @@map("clients")
 }
 
@@ -74,7 +62,7 @@ model Invoice{
 
   //relasi user - invoice
   client_id           String
-  client              Client @relation(fields: [client_id], references: [client_id], onDelete: Cascade)
+  client              Client @relation(fields: [client_id], references: [client_id], onDelete: Cascade, onUpdate: Cascade)
 
   //relasi invoice - invoice_detail
   invoice_details     InvoiceDetail[]
@@ -82,6 +70,7 @@ model Invoice{
   //relasi invoice - payment
   payments            Payment[]
 
+  @@index([invoice_id, invoice_number])
   @@map("invoices")
 }
 
@@ -95,11 +84,13 @@ model InvoiceDetail{
   created_at            DateTime  @default(now())
   updated_at            DateTime  @updatedAt
 
-  @@map("invoice_details")
 
   //relasi invoice - invoice_detail
   invoice_id        String
   invoice           Invoice @relation(fields: [invoice_id], references: [invoice_id], onDelete: Cascade)
+
+  @@index([invoice_detail_id])
+  @@map("invoice_details")
 }
 
 model Payment{
@@ -111,9 +102,28 @@ model Payment{
   created_at            DateTime @default(now())
   updated_at            DateTime @updatedAt
 
-  @@map("payments")
 
   //relasi invoice - payment
   invoice_id          String
+  invoice_number      String
   invoice             Invoice @relation(fields: [invoice_id], references: [invoice_id], onDelete: Cascade)
+
+  @@index([payment_id])
+  @@map("payments")
+}
+
+model Log{
+  log_id              Int @id @default(autoincrement())
+  ip                  String
+  acces_token         String?
+  username            String  //username yang login 
+  method              String  // GET, POST, PUT, DELETE
+  endpoint            String  // invoice/7e2a9a30-bfa4-4e1f-b99d-d61ef2943f77
+  payload             Json?   // JSON.stringify(params) untuk menyimpan parameter request
+  status              String  // success, error
+  status_message      String
+  created_at          DateTime @default(now())
+
+  @@index([created_at, log_id, username])
+  @@map("logs")
 }

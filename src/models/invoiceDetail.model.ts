@@ -11,14 +11,15 @@ export const invoiceDetailSchema = z.object({
   updatedAt: z.date(),
 });
 
-export const invoiceDetailRequestSchema = invoiceDetailSchema.pick({
+export const invoiceDetailCreateSchema = invoiceDetailSchema.pick({
   transaction_note: true,
   delivery_count: true,
   price_per_delivery: true,
 });
 
-export const invoiceWithDetailsRequestSchema = invoiceDetailSchema.extend({
-  invoice_id: z.string().uuid().optional(),
+export const invoiceDetailUpdateSchema = invoiceDetailCreateSchema.extend({
+  invoice_detail_id: z.string().uuid().optional(),
 });
 
-export type InvoiceDetailRequest = z.infer<typeof invoiceDetailRequestSchema>;
+export type InvoiceDetailCreate = z.infer<typeof invoiceDetailCreateSchema>;
+export type InvoiceDetailUpdate = z.infer<typeof invoiceDetailUpdateSchema>;

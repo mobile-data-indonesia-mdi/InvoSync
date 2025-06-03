@@ -5,15 +5,18 @@ import {
   getAllClientController,
   getClientByIdController,
   editClientByIdController,
-  deleteClientByIdController,
+  // deleteClientByIdController,
 } from '@controllers/client.controller';
+
+import { authGuard } from '@middlewares/jwt.middleware';
+import { roleGuard } from '@middlewares/role.middleware';
 
 const router = Router();
 
-router.get('/', getAllClientController);
-router.get('/:id', getClientByIdController);
-router.post('/', createClientController);
-router.put('/:id', editClientByIdController);
-router.delete('/:id', deleteClientByIdController);
+router.post('/', authGuard, roleGuard(['finance']), createClientController);
+router.get('/', authGuard, roleGuard(['finance', 'management']), getAllClientController);
+router.get('/:id', authGuard, roleGuard(['finance', 'management']), getClientByIdController);
+router.put('/:id', authGuard, roleGuard(['finance']), editClientByIdController);
+// router.delete('/:id', authGuard, roleGuard(['finance']), deleteClientByIdController);
 
 export default router;
