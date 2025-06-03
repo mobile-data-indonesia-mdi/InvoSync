@@ -1,0 +1,32 @@
+services:
+  stockhive:
+    # image: michaeltio/stockhive:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: stockhive-app
+    ports:
+      - '8000:8000'
+    environment:
+      - PORT=8000
+      - JWT_ACCESS_SECRET=secret
+      - JWT_REFRESH_SECRET=secret
+      - DB_CONFIG=host=postgres user=postgres password=root dbname=stockhive port=5432 sslmode=disable TimeZone=Asia/Jakarta
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:latest
+    container_name: postgres_db
+    restart: always
+    environment:
+      POSTGRES_DB: stockhive
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+    ports:
+      - '5432:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
