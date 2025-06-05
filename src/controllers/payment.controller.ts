@@ -4,7 +4,7 @@ import {
   createPaymentService,
   getAllPaymentService,
   getPaymentByIdService,
-  editPaymentService, 
+  editPaymentService,
   getProofPaymentService,
   togglePaymentVoidStatusService,
 } from '@services/payment.service';
@@ -59,7 +59,7 @@ import HttpError from '@utils/httpError';
  *          type: string
  *          format: string
  *          description: Nomor invoice yang terkait dengan pembayaran
- *      example: 
+ *      example:
  *        payment_id: "123e4567-e89b-12d3-a456-426614174000"
  *        payment_date: "2024-05-01"
  *        amount_paid: 1000
@@ -72,7 +72,7 @@ import HttpError from '@utils/httpError';
  */
 
 /**
- * @swagger    
+ * @swagger
  * /payments:
  *   post:
  *     summary: Membuat payment baru
@@ -119,7 +119,7 @@ import HttpError from '@utils/httpError';
  *                   example: Data successfully created
  *                 data:
  *                   type: object
- *                   $ref: '#/components/schemas/Payment'            
+ *                   $ref: '#/components/schemas/Payment'
  *       400:
  *         description: Parameter tidak valid
  *         content:
@@ -156,7 +156,7 @@ import HttpError from '@utils/httpError';
  *                   type: string
  *                   example: Invoice with number INV-2024-001 not found
  *                 data:
- *                   type: "null"	
+ *                   type: "null"
  *       409:
  *         description: Konflik pembayaran (contoh, invoice sudah dibayar)
  *         content:
@@ -174,7 +174,7 @@ import HttpError from '@utils/httpError';
  *                   type: string
  *                   example: Client sudah membayar semua tagihan pada invoice INV-2024-001
  *                 data:
- *                   type: "null"	
+ *                   type: "null"
  *       500:
  *         description: Kesalahan server internal
  *         content:
@@ -193,7 +193,7 @@ import HttpError from '@utils/httpError';
  *                   example: Internal server error
  *                 data:
  *                   type: "null"
- * 
+ *
  */
 export const createPaymentController = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -256,7 +256,7 @@ export const createPaymentController = async (req: Request, res: Response): Prom
  *                 data:
  *                   type: array
  *                   items:
- *                     $ref: '#/components/schemas/Payment'  
+ *                     $ref: '#/components/schemas/Payment'
  *       500:
  *         description: Kesalahan server internal
  *         content:
@@ -464,7 +464,7 @@ export const getPaymentByIdController = async (req: Request, res: Response) => {
  *                 format: date-time
  *                 nullable: true
  *                 example: null
- * 
+ *
  *     responses:
  *       201:
  *         description: Pembayaran berhasil diperbarui
@@ -520,7 +520,7 @@ export const getPaymentByIdController = async (req: Request, res: Response) => {
  *                   type: string
  *                   example: Payment not found
  *                 data:
- *                   type: "null"	
+ *                   type: "null"
  *       409:
  *         description: Konflik pembayaran (contoh, lebih bayar dari total tagihan pada invoice)
  *         content:
@@ -538,7 +538,7 @@ export const getPaymentByIdController = async (req: Request, res: Response) => {
  *                   type: string
  *                   example: Overpayment detected
  *                 data:
- *                   type: "null"	
+ *                   type: "null"
  *       500:
  *         description: Kesalahan server internal
  *         content:
@@ -794,7 +794,7 @@ export const getProofPaymentController = async (req: Request, res: Response) => 
  *                 data:
  *                   type: object
  *                   example: { message: "Payment ID is required" }
-  *       404:
+ *       404:
  *         description: Pembayaran tidak ditemukan
  *         content:
  *           application/json:
@@ -843,7 +843,7 @@ export const togglePaymentVoidStatusController = async (req: Request, res: Respo
     }
 
     const payment = await togglePaymentVoidStatusService(paymentId);
-    if(!payment) {
+    if (!payment) {
       await log(req, 'ERROR', 'Payment not found for ID: ' + paymentId);
       responseHelper(res, 'error', 404, 'Payment not found for ID: ' + paymentId, null);
       return;

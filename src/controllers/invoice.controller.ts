@@ -818,7 +818,10 @@ export const updateInvoiceByIdController = async (req: Request, res: Response): 
  *                 data:
  *                   type: "null"
  */
-export const toggleInvoiceVoidStatusController = async ( req: Request, res: Response): Promise<void> => {
+export const toggleInvoiceVoidStatusController = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   try {
     const invoiceId = req.params.id;
 

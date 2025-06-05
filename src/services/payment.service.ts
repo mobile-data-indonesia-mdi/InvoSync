@@ -1,7 +1,10 @@
 import { prisma } from '@config/db';
 import { type PaymentRequestSchema, type PaymentUpdateRequestSchema } from '@models/payment.model';
 import type { Prisma } from '@prisma/client';
-import { getInvoiceByInvoiceNumberService, updateInvoiceColAmountPaidService } from '@services/invoice.service';
+import {
+  getInvoiceByInvoiceNumberService,
+  updateInvoiceColAmountPaidService,
+} from '@services/invoice.service';
 import fs from 'fs';
 import path from 'path';
 import HttpError from '@utils/httpError';
@@ -41,12 +44,11 @@ export const createPaymentService = async (
 
       return payment;
     });
-    
+
     if (createdPayment.payment_id) {
       const urlPath = path.join('payments/upload', _renameFile(file, createdPayment.payment_id));
       await _updateProofOfTransferService(createdPayment.payment_id, urlPath); // Update path file di database
     }
-    
 
     return await getPaymentByIdService(createdPayment.payment_id);
   } catch (error) {
@@ -66,7 +68,7 @@ export const getAllPaymentService = async () => {
       },
       include: {
         invoice: {
-            include: {
+          include: {
             client: true,
           },
         },
@@ -87,11 +89,11 @@ export const getPaymentByIdService = async (payment_id: string) => {
   try {
     const payment = await prisma.payment.findUnique({
       where: {
-      payment_id,
+        payment_id,
       },
       include: {
         invoice: {
-            include: {
+          include: {
             client: true,
           },
         },
@@ -108,7 +110,7 @@ export const getPaymentByIdService = async (payment_id: string) => {
       throw error;
     }
 
-    console.error("Error Payment: ", error);
+    console.error('Error Payment: ', error);
     throw new HttpError('Internal Server Error', 500);
   }
 };
@@ -153,12 +155,18 @@ export const editPaymentService = async (
         proof_of_transfer: updatedProofOfTransfer,
       };
 
-      const updatedPaymentRecord = await transaction.payment.update({ where: { payment_id: paymentId }, data: updatePayload });
+      const updatedPaymentRecord = await transaction.payment.update({
+        where: { payment_id: paymentId },
+        data: updatePayload,
+      });
 
       if (currentInvoiceId !== newInvoiceId) {
         await updateInvoiceColAmountPaidService(transaction, currentInvoiceId);
         await updateInvoiceColAmountPaidService(transaction, newInvoiceId);
-      } else if (currentAmountPaid !== updatedPaymentData.amount_paid || currentVoidedAt !== updatedPaymentData.voided_at) {
+      } else if (
+        currentAmountPaid !== updatedPaymentData.amount_paid ||
+        currentVoidedAt !== updatedPaymentData.voided_at
+      ) {
         await updateInvoiceColAmountPaidService(transaction, currentInvoiceId);
       }
 
@@ -234,8 +242,7 @@ export const togglePaymentVoidStatusService = async (payment_id: string) => {
     });
 
     return updatedPayment;
-  }
-  catch (error) {
+  } catch (error) {
     if (error instanceof HttpError) {
       throw error;
     }
@@ -283,19 +290,20 @@ export const togglePaymentVoidStatusService = async (payment_id: string) => {
 //   }
 // };
 
-const _renameFile = (file: Express.Multer.File, payment_id: string): string => { //Untuk rename saja
+const _renameFile = (file: Express.Multer.File, payment_id: string): string => {
+  //Untuk rename saja
   const tempFilePath = file.path;
   const fileExtension = file.mimetype.split('/')[1];
   const renamedFileName = `${payment_id}.${fileExtension}`;
   const renamedFilePath = path.join(path.dirname(tempFilePath), renamedFileName);
-  
+
   const absoluteRenamedPath = path.resolve(renamedFilePath);
   const absoluteTempPath = path.resolve(tempFilePath);
   fs.renameSync(absoluteTempPath, absoluteRenamedPath);
 
   if (!fs.existsSync(absoluteRenamedPath)) {
     throw new HttpError('Error renaming file', 500);
-  } 
+  }
   return renamedFileName;
 };
 
@@ -311,7 +319,7 @@ const _deleteFile = (filePath: string): void => {
   } else {
     throw new HttpError('File not found', 404);
   }
-}
+};
 
 // Invoice service -> Payment service
 // Update invoice_number pada payment berdasarkan invoice_id
@@ -332,4 +340,4 @@ export const updatePaymentColInvoiceNumberService = async (
 
     throw new HttpError('Internal Server Error', 500);
   }
-}
+};

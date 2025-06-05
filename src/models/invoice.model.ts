@@ -15,7 +15,10 @@ export const invoiceSchema = z.object({
   payment_status: z.enum(['paid', 'unpaid', 'partial'], {
     errorMap: () => ({ message: 'Payment status must be one of: paid, unpaid, partial' }),
   }),
-  voided_at: z.string().transform(val => new Date(val)).optional(),
+  voided_at: z
+    .string()
+    .transform(val => new Date(val))
+    .optional(),
   created_at: z.date(),
   updated_at: z.date(),
   client_id: z.string(),

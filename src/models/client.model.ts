@@ -15,7 +15,9 @@ export const clientSchema = z.object({
   postal_code: z
     .string()
     .min(1, { message: 'Postal code is required' })
-    .regex(/^\d{5,10}$/, { message: 'Postal code should be between 5 and 10 digits, e.g., 12345 or 1234567890' }),
+    .regex(/^\d{5,10}$/, {
+      message: 'Postal code should be between 5 and 10 digits, e.g., 12345 or 1234567890',
+    }),
   client_phone: z
     .string()
     .min(1, { message: 'Client phone is required' })

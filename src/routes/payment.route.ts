@@ -37,8 +37,12 @@ router.put(
   upload_payment.single('proof_of_transfer'),
   editPaymentController,
 );
-router.patch('/:id/void-status', authGuard, roleGuard(['finance', 'management']), togglePaymentVoidStatusController);
+router.patch(
+  '/:id/void-status',
+  authGuard,
+  roleGuard(['finance', 'management']),
+  togglePaymentVoidStatusController,
+);
 //router.delete('/:id', authGuard, roleGuard(['finance']), deletePaymentController);
-
 
 export default router;

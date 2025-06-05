@@ -89,7 +89,7 @@ export const getAllInvoiceService = async () => {
         invoice_details: true,
       },
     });
-    
+
     return invoices;
   } catch (error) {
     if (error instanceof HttpError) {
@@ -279,8 +279,7 @@ export const toggleInvoiceVoidStatusService = async (invoice_id: string) => {
     });
 
     return updatedInvoice;
-  }
-  catch (error) {
+  } catch (error) {
     if (error instanceof HttpError) {
       throw error;
     }

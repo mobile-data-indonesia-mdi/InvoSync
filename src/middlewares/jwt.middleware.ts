@@ -2,7 +2,7 @@ import type { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { prisma } from '@config/db';
 import env from '@config/env';
-import {responseHelper} from '@utils/responseHelper';
+import { responseHelper } from '@utils/responseHelper';
 
 export const authGuard = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   const accessToken = req.cookies['accessToken'];
