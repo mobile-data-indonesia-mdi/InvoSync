@@ -5,9 +5,9 @@
     "start": "bun dist/server.js",
     "lint": "eslint . --ext .ts",
     "prettier": "prettier --write .",
-    "test": "bunx jest",
     "migrate": "bunx prisma migrate dev",
-    "migrate:reset": "bunx prisma migrate reset --force"
+    "migrate:reset": "bunx prisma migrate reset --force",
+    "db:deploy": "bunx prisma migrate deploy"
   },
   "dependencies": {
     "@prisma/client": "^6.6.0",

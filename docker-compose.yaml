@@ -1,32 +1,33 @@
 services:
-  stockhive:
-    # image: michaeltio/stockhive:latest
+  app:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: stockhive-app
     ports:
       - '5000:5000'
     environment:
-      - APP_PORT=5000
-      - JWT_SECRET_ACCESS=secret
-      - JWT_SECRET_REFRESH=secret
-      - DATABASE_URL=postgresql://postgres:root@postgres:5432/invosync_db?schema=public
+      APP_PORT: 5000
+      DATABASE_URL: 'postgresql://postgres:root@db:5432/invosync_db?schema=public'
+      NODE_ENV: development
+      JWT_SECRET_ACCESS: 'exlaq3Q2gsWb74s4gkpGRUnH9pDIFGqo'
+      JWT_SECRET_REFRESH: 'pHjDg120skgOx3wG8GO02udxYFhZic1X'
+      JWT_SECRET_ACCESS_LIFETIME: '15m'
+      JWT_SECRET_REFRESH_LIFETIME: '30d'
     depends_on:
-      - postgres
+      - db
+    volumes:
+      - ./:/usr/src/app
+    command: bash -c "bun run migrate && bunx prisma migrate deploy && bun run start"
 
-  postgres:
-    image: postgres:latest
-    container_name: postgres_db
+  db:
+    image: postgres:16-alpine
     restart: always
     environment:
       POSTGRES_DB: invosync_db
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: root
-    ports:
-      - '5432:5432'
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - db_data:/var/lib/postgresql/data
 
 volumes:
-  pgdata:
+  db_data:
