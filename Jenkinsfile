@@ -10,6 +10,10 @@ pipeline {
         IMAGE_TAG = "latest"
     }
 
+    triggers {
+        githubPush() 
+    }
+
     stages {
         stage('Checkout') {
             steps {
