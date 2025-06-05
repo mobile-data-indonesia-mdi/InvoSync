@@ -1,7 +1,7 @@
 services:
   app:
     build:
-      context: ./InvoSync
+      context: .
       dockerfile: Dockerfile
     ports:
       - '5000:5000'
@@ -29,16 +29,16 @@ services:
     volumes:
       - db_data:/var/lib/postgresql/data
 
-  fe:
-    build:
-      context: ./Invoice-web-app-react-main
-      dockerfile: Dockerfile
-    ports:
-      - '4173:4173'
-    environment:
-      NODE_ENV: development
-    depends_on:
-      - app
+  # fe:
+  #   build:
+  #     context: ./Invoice-web-app-react-main
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - '4173:4173'
+  #   environment:
+  #     NODE_ENV: development
+  #   depends_on:
+  #     - app
 
 volumes:
   db_data:
