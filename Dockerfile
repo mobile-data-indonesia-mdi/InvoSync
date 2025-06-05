@@ -6,7 +6,7 @@ COPY bun.lock package.json ./
 
 RUN bun install --frozen-lockfile --production
 
-RUN ls -la /app/src/utils/
+RUN ls -la /app
 
 COPY . .
 
