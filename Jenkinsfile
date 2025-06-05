@@ -2,18 +2,18 @@ pipeline {
     agent any
 
     environment {
-        DEPLOY_SERVER = "4.237.71.147"
+        DEPLOY_SERVER = "20.92.226.61"
         DEPLOY_USER = "mdi"
-        SSH_KEY = "e4bfa090-50e0-428e-93e3-bb43fc9f1b19"
-        DEPLOY_PATH = "/home/mdi/stockhive"
-        IMAGE_NAME = "stockhive"
+        SSH_KEY = "210fbc00-55af-410b-95df-26f449fe3287"
+        DEPLOY_PATH = "/home/mdi/invoice-be-mdi"
+        IMAGE_NAME = "invoice-be-mdi"
         IMAGE_TAG = "latest"
     }
 
     stages {
         stage('Checkout') {
             steps {
-                git url: 'https://github.com/mobile-data-indonesia/stockhive-server.git', branch: 'main'
+                git url: 'https://github.com/mobile-data-indonesia-mdi/InvoSync.git', branch: 'dev'
             }
         }
 
