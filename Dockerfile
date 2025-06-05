@@ -10,7 +10,7 @@ RUN ls -la /app
 
 COPY . .
 
-RUN ls -la /app/src
+RUN ls -la /app/src/utils
 
 RUN bunx prisma generate
 
