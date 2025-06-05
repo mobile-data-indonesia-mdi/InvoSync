@@ -6,7 +6,11 @@ COPY bun.lock package.json ./
 
 RUN bun install --frozen-lockfile --production
 
+RUN ls -la /app/src/utils/
+
 COPY . .
+
+RUN ls -la /app/src/utils/
 
 RUN bunx prisma generate
 
