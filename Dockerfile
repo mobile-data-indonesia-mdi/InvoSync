@@ -10,7 +10,7 @@ COPY . .
 
 RUN bunx prisma generate
 
-RUN bun compile
+RUN bun run compile --verbose
 
 EXPOSE 5000
 
