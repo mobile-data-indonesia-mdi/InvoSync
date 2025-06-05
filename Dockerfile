@@ -6,11 +6,11 @@ COPY bun.lock package.json ./
 
 RUN bun install --frozen-lockfile --production
 
-copy . .
- 
+COPY . .
+
 RUN bunx prisma generate
 
-RUN bun run compile
+RUN bun compile
 
 EXPOSE 5000
 
