@@ -5,7 +5,7 @@ pipeline {
         IMAGE_NAME = "invoice-be-mdi"
         IMAGE_TAG = "latest"
     }
-    
+
     stages {
         stage('Build Docker Image') {
             steps {
@@ -29,4 +29,3 @@ pipeline {
     }
 }
 
-/////
