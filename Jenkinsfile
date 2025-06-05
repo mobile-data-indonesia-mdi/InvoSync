@@ -1,18 +1,29 @@
 pipeline {
     agent any
 
-
+    environment {
+        IMAGE_NAME = "invoice-be-mdi"
+        IMAGE_TAG = "latest"
+    }
+    
     stages {
-        stage('Trigger Test') {
+        stage('Build Docker Image') {
             steps {
-                echo "✅ Jenkins Pipeline Triggered Successfully!"
+                sh """
+                    docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
+                """
             }
         }
 
-        stage('Print Dockerfile') {
+        stage('Push Docker Image') {
             steps {
-                echo 'Isi Dockerfile:'
-                sh 'cat Dockerfile'
+                withCredentials([string(credentialsId: 'DOCKERHUB', variable: 'DOCKERHUB')]) {
+                    sh """
+                        echo ${DOCKERHUB} | docker login --username michaeltio --password-stdin &&
+                        docker tag ${IMAGE_NAME}:${IMAGE_TAG} michaeltio/${IMAGE_NAME}:${IMAGE_TAG} &&
+                        docker push michaeltio/${IMAGE_NAME}:${IMAGE_TAG}
+                    """
+                }
             }
         }
     }
