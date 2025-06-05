@@ -1,8 +1,9 @@
 services:
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile
+    image: michaeltio/invoice-be-mdi
     ports:
       - '5000:5000'
     environment:
@@ -29,16 +30,17 @@ services:
     volumes:
       - db_data:/var/lib/postgresql/data
 
-  # fe:
-  #   build:
-  #     context: ./Invoice-web-app-react-main
-  #     dockerfile: Dockerfile
-  #   ports:
-  #     - '4173:4173'
-  #   environment:
-  #     NODE_ENV: development
-  #   depends_on:
-  #     - app
+  fe:
+    # build:
+    #   context: ./Invoice-web-app-react-main
+    #   dockerfile: Dockerfile
+    image: michaeltio/invoice-fe-mdi:latest
+    ports:
+      - '4173:4173'
+    environment:
+      NODE_ENV: development
+    depends_on:
+      - app
 
 volumes:
   db_data:
