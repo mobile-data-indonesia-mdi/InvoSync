@@ -8,6 +8,7 @@ pipeline {
         IMAGE_TAG = "latest"
         SSH_KEY = "210fbc00-55af-410b-95df-26f449fe3287"
         DEPLOY_PATH = "/home/mdi/invoice-be-mdi"
+        SSH_PATH = '/mnt/c/users/nflue/ssh/inventaris_key.pem'
 
     }
 
@@ -36,7 +37,7 @@ pipeline {
             steps {
                 sshagent (credentials: ["${SSH_KEY}"]) {
                     sh """
-                    scp docker-compose.yaml ${DEPLOY_USER}@${DEPLOY_SERVER}:${DEPLOY_PATH}
+                    scp -i ${SSH_PATH}docker-compose.yaml ${DEPLOY_USER}@${DEPLOY_SERVER}:${DEPLOY_PATH}
                     """
                 }
             }
