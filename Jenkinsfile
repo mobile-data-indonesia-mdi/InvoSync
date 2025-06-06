@@ -37,7 +37,7 @@ pipeline {
             steps {
                 sshagent (credentials: ["${SSH_KEY}"]) {
                     sh """
-                    scp -i ${SSH_PATH}docker-compose.yaml ${DEPLOY_USER}@${DEPLOY_SERVER}:${DEPLOY_PATH}
+                    scp -i ${SSH_PATH} docker-compose.yaml ${DEPLOY_USER}@${DEPLOY_SERVER}:${DEPLOY_PATH}
                     """
                 }
             }
