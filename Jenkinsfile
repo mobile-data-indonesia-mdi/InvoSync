@@ -6,9 +6,8 @@ pipeline {
         DEPLOY_USER = "mdi"
         IMAGE_NAME = "invoice-be-mdi"
         IMAGE_TAG = "latest"
-        SSH_KEY = "210fbc00-55af-410b-95df-26f449fe3287"
+        SSH_KEY = "mdi-ssh-key"
         DEPLOY_PATH = "/home/mdi/invoice-be-mdi"
-        SSH_PATH = '/mnt/c/users/nflue/ssh/inventaris_key.pem'
 
     }
 
@@ -35,14 +34,10 @@ pipeline {
 
         stage('Send Docker Compose') {
             steps {
-                withCredentials([file(credentialsId: "${SSH_KEY}", variable: 'SSH_PATH')]) {
-                    sh '''
-                    chmod 600 $SSH_PATH
-                    mkdir -p ~/.ssh
-                    ssh-keyscan -H ${DEPLOY_SERVER} >> ~/.ssh/known_hosts
-
-                    scp -i $SSH_PATH docker-compose.yaml ${DEPLOY_USER}@${DEPLOY_SERVER}:${DEPLOY_PATH}
-                    '''
+                sshagent (credentials: ["${SSH_KEY}"]) {
+                    sh """
+                    scp docker-compose.yaml ${DEPLOY_USER}@${DEPLOY_SERVER}:${DEPLOY_PATH}
+                    """
                 }
             }
         }
