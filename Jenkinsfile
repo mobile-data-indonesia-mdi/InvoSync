@@ -15,7 +15,7 @@ pipeline {
         stage('Callout ') {
             steps {
                 sh """
-                    echo "from backend"
+                    echo from backend
                 """
             }
         }
