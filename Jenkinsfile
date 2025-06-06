@@ -7,7 +7,7 @@ pipeline {
         IMAGE_NAME = "invoice-be-mdi"
         IMAGE_TAG = "latest"
         SSH_KEY = "mdi-ssh-key"
-        DEPLOY_PATH = "/home/mdi/invoice-be-mdi"
+        DEPLOY_PATH = "/home/mdi/invoice-mdi"
 
     }
 
@@ -36,6 +36,7 @@ pipeline {
             steps {
                 sshagent (credentials: ["${SSH_KEY}"]) {
                     sh """
+                    echo ${SSH_KEY} &&
                     scp docker-compose.yaml ${DEPLOY_USER}@${DEPLOY_SERVER}:${DEPLOY_PATH}
                     """
                 }
