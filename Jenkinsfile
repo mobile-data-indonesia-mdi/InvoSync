@@ -12,6 +12,13 @@ pipeline {
     }
 
     stages {
+        stage('Callout ') {
+            steps {
+                sh """
+                    echo "from backend"
+                """
+            }
+        }
         stage('Build Docker Image') {
             steps {
                 sh """
