@@ -35,10 +35,14 @@ pipeline {
 
         stage('Send Docker Compose') {
             steps {
-                sshagent (credentials: ["${SSH_KEY}"]) {
-                    sh """
-                    scp -i ${SSH_PATH} docker-compose.yaml ${DEPLOY_USER}@${DEPLOY_SERVER}:${DEPLOY_PATH}
-                    """
+                withCredentials([file(credentialsId: "${SSH_KEY}", variable: 'SSH_PATH')]) {
+                    sh '''
+                    chmod 600 $SSH_PATH
+                    mkdir -p ~/.ssh
+                    ssh-keyscan -H ${DEPLOY_SERVER} >> ~/.ssh/known_hosts
+
+                    scp -i $SSH_PATH docker-compose.yaml ${DEPLOY_USER}@${DEPLOY_SERVER}:${DEPLOY_PATH}
+                    '''
                 }
             }
         }
