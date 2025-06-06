@@ -7,6 +7,8 @@ pipeline {
         IMAGE_NAME = "invoice-be-mdi"
         IMAGE_TAG = "latest"
         SSH_KEY = "210fbc00-55af-410b-95df-26f449fe3287"
+        DEPLOY_PATH = "/home/mdi/invoice-be-mdi"
+
     }
 
     stages {
