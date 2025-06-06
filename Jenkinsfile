@@ -36,8 +36,7 @@ pipeline {
             steps {
                 sshagent (credentials: ["${SSH_KEY}"]) {
                     sh """
-                    echo ${SSH_KEY} &&
-                    scp docker-compose.yaml ${DEPLOY_USER}@${DEPLOY_SERVER}:${DEPLOY_PATH}
+                    scp -o StrictHostKeyChecking=no docker-compose.yaml ${DEPLOY_USER}@${DEPLOY_SERVER}:${DEPLOY_PATH}
                     """
                 }
             }
