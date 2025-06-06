@@ -1,9 +1,9 @@
 services:
-  app:
-    # build:
-    #   context: .
-    #   dockerfile: Dockerfile
-    image: michaeltio/invoice-be-mdi
+  be:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    # image: michaeltio/invoice-be-mdi
     ports:
       - '5000:5000'
     environment:
@@ -18,7 +18,7 @@ services:
       - db
     volumes:
       - ./:/usr/src/app
-    command: bash -c "bun run migrate && bunx prisma migrate deploy && bun seed && bun run start"
+    command: bash -c "bun run migrate && bunx prisma migrate deploy && bun run migrate:reset && bun seed && bun run start"
 
   db:
     image: postgres:16-alpine
@@ -31,16 +31,16 @@ services:
       - db_data:/var/lib/postgresql/data
 
   fe:
-    # build:
-    #   context: ./Invoice-web-app-react-main
-    #   dockerfile: Dockerfile
-    image: michaeltio/invoice-fe-mdi:latest
+    build:
+      context: ../Invoice-web-app-react-main
+      dockerfile: Dockerfile
+    # image: michaeltio/invoice-fe-mdi:latest
     ports:
-      - '80:4173'
+      - '4173:4173'
     environment:
       VITE_API_URL: http://20.92.226.61:5000
     depends_on:
-      - app
+      - be
 
 volumes:
   db_data:
