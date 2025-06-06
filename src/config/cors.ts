@@ -1,5 +1,5 @@
 const corsOptions = {
-  origin: 'localhost:4173',
+  origin: 'http://localhost:4173',
   credentials: true,
 };
 
