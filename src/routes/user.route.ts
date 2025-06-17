@@ -25,6 +25,6 @@ router.get('/profile', authGuard, profileController);
 // router.post('/register', authGuard, roleGuard(['management']), registerController); //ini buat nanti
 router.get('/', authGuard, roleGuard(['management']), getAllUserController);
 router.get('/:id', authGuard, roleGuard(['management']), getUserByIdController);
-router.put('/:id', authGuard, roleGuard(['management']), editUserByIdController);
+router.put('/:id', authGuard, editUserByIdController);
 
 export default router;
