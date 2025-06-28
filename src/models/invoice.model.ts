@@ -21,7 +21,7 @@ export const invoiceSchema = z.object({
     .optional(),
   created_at: z.date(),
   updated_at: z.date(),
-  client_id: z.string(),
+  client_id: z.string(),  
 });
 
 export const invoiceRequestSchema = invoiceSchema.pick({
