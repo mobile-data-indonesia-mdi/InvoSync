@@ -18,6 +18,11 @@ const seedUsers = async () => {
       password: 'strongpassword123',
       role: 'management',
     },
+    {
+      username: 'finance',
+      password: 'strongpassword123',
+      role: 'finance',
+    },
   ];
 
   for (const user of users) {
