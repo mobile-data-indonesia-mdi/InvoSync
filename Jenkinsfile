@@ -38,7 +38,7 @@ pipeline {
                 }
             }
         }
-
+// 
         // stage('Send Docker Compose') {
         //     steps {
         //         sshagent (credentials: ["${SSH_KEY}"]) {
