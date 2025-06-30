@@ -37,7 +37,7 @@ services:
     ports:
       - '80:4173'
     environment:
-      VITE_API_URL: http://20.92.226.61:5000
+      VITE_API_URL: http://be:5000
     depends_on:
       - be
 
