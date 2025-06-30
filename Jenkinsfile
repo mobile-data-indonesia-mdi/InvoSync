@@ -39,25 +39,25 @@ pipeline {
             }
         }
 
-        stage('Send Docker Compose') {
-            steps {
-                sshagent (credentials: ["${SSH_KEY}"]) {
-                    sh """
-                    scp -o StrictHostKeyChecking=no docker-compose.yaml ${DEPLOY_USER}@${DEPLOY_SERVER}:${DEPLOY_PATH}
-                    """
-                }
-            }
-        }
+        // stage('Send Docker Compose') {
+        //     steps {
+        //         sshagent (credentials: ["${SSH_KEY}"]) {
+        //             sh """
+        //             scp -o StrictHostKeyChecking=no docker-compose.yaml ${DEPLOY_USER}@${DEPLOY_SERVER}:${DEPLOY_PATH}
+        //             """
+        //         }
+        //     }
+        // }
 
-        stage('Deploy via SSH') {
-            steps {
-                sshagent (credentials: ["${SSH_KEY}"]) {
-                    sh """
-                        ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_SERVER} \\
-                        'cd ${DEPLOY_PATH} && docker compose pull && docker compose up --build -d'
-                    """
-                }
-            }
-        }
+        // stage('Deploy via SSH') {
+        //     steps {
+        //         sshagent (credentials: ["${SSH_KEY}"]) {
+        //             sh """
+        //                 ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_SERVER} \\
+        //                 'cd ${DEPLOY_PATH} && docker compose pull && docker compose up --build -d'
+        //             """
+        //         }
+        //     }
+        // }
     }
 }
