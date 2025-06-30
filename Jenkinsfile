@@ -48,7 +48,7 @@ pipeline {
                 }
             }
         }
-
+// 
         stage('Deploy via SSH') {
             steps {
                 sshagent (credentials: ["${SSH_KEY}"]) {
