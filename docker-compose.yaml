@@ -21,7 +21,7 @@ services:
     command: bash -c "bun run migrate && bunx prisma migrate deploy && bun run migrate:reset && bun seed && bun run start"
 
   db:
-    image: postgres:16-alpine`
+    image: postgres:16-alpine
     environment:
       POSTGRES_DB: invosync_db
       POSTGRES_USER: postgres
